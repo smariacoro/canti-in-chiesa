@@ -120,7 +120,7 @@ export function printView(root, params) {
     const songs = selectedSongs();
     body.append(el('div', { class: 'btn-row', style: 'margin-top:1rem' }, [
       el('button', {
-        class: 'btn primary', type: 'button', html: '&#128424;&nbsp; Stampa',
+        class: 'btn primary', type: 'button', html: '&#128424;&#xFE0F;&nbsp; Stampa',
         onclick: () => doPrint(songs),
       }),
       el('span', {

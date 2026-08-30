@@ -158,7 +158,7 @@ export function songView(root, params, id) {
 
   toolbar.append(el('button', {
     class: 'pill', type: 'button',
-    html: '&#127901; Organo',
+    html: '&#127929; Organo',
     title: 'Arrangiamento per organo',
     onclick: () => organModal(song, repaint, transpose),
   }));
@@ -242,10 +242,10 @@ function menu(song, repaint, transpose = 0) {
     });
     const rows = [
       item('Modifica canto', '&#9998;', () => editSong(song, repaint)),
-      item('Arrangiamento per organo', '&#127901;', () => organModal(song, repaint, transpose)),
+      item('Arrangiamento per organo', '&#127929;', () => organModal(song, repaint, transpose)),
       item('Aggiungi a una scaletta', '&#128197;', () => addToSetlistDialog(song)),
       item('Batti il tempo (bpm)', '&#9201;', () => tapTempoDialog(song, repaint)),
-      item('Stampa questo canto', '&#128424;', () => navigate(`#/stampa?canto=${encodeURIComponent(song.id)}`)),
+      item('Stampa questo canto', '&#128424;&#xFE0F;', () => navigate(`#/stampa?canto=${encodeURIComponent(song.id)}`)),
     ];
     if (store.isModified(song.id)) {
       rows.push(item('Ripristina la versione originale', '&#8634;', async () => {
@@ -256,7 +256,7 @@ function menu(song, repaint, transpose = 0) {
         }
       }, 'danger'));
     } else if (song.custom) {
-      rows.push(item('Elimina canto', '&#128465;', async () => {
+      rows.push(item('Elimina canto', '&#128465;&#xFE0F;', async () => {
         if (await confirmDialog('Eliminare?', `"${song.title}" verrà rimosso.`, { danger: true, okLabel: 'Elimina' })) {
           store.deleteSong(song.id);
           toast('Canto eliminato');

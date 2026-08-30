@@ -363,6 +363,45 @@ textarea.input { min-height: 8rem; resize: vertical; font-family: ui-monospace, 
 .setlist-row .s { font-size: .78rem; color: var(--ink-faint); }
 .setlist-row.next { background: color-mix(in srgb, var(--gold) 8%, transparent); }
 
+/* quanti momenti della messa hanno già il loro canto */
+.coverage { display: flex; align-items: center; gap: .6rem; margin-top: .2rem; }
+.coverage-bar { display: flex; gap: 3px; flex: 1; }
+.coverage-tick {
+  flex: 1; height: 6px; border-radius: 3px;
+  background: var(--line); transition: background .2s ease;
+}
+.coverage-tick.on { background: var(--gold); }
+.coverage-text { font-size: .74rem; color: var(--ink-faint); font-weight: 600; white-space: nowrap; }
+
+.sl-moment {
+  display: flex; align-items: baseline; gap: .5rem;
+  padding: .6rem .75rem .2rem;
+  font-size: .7rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--gold);
+}
+.sl-count { color: var(--ink-faint); letter-spacing: 0; font-weight: 600; text-transform: none; }
+
+.sl-empty {
+  display: block; width: 100%; text-align: left;
+  min-height: 2.9rem; padding: .55rem .75rem;
+  margin: 0 0 .2rem;
+  background: none; border: 0; border-bottom: 1px solid var(--line);
+  color: var(--ink-faint); font-size: .92rem; font-weight: 600; cursor: pointer;
+}
+.sl-empty span {
+  display: inline-block; width: 100%;
+  border: 1px dashed var(--line); border-radius: var(--radius-sm);
+  padding: .45rem .6rem;
+}
+.sl-empty:active span, .sl-empty:hover span { border-color: var(--accent); color: var(--accent); }
+
+.sl-extra {
+  margin-left: .4rem; padding: .05rem .35rem;
+  font-size: .64rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-faint); background: var(--bg-sunken); border-radius: 4px;
+  vertical-align: .1em;
+}
+
 .sl-item {
   display: flex; align-items: center; gap: .6rem;
   padding: .55rem .6rem; border-bottom: 1px solid var(--line);

@@ -17,8 +17,11 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 - **Tonalità e ritmo**: toccando la tonalità si sente l'accordo per intonare;
   toccando il bpm parte il metronomo. Il bpm si imposta battendo il tempo.
 - **Trasposizione** di semitoni, con gli accordi che si riscrivono da soli.
-- **Scalette con data**: si aprono durante la messa e si passa da un canto al
-  successivo senza tornare indietro. Lo schermo resta acceso mentre si canta.
+- **Scalette con data**, strutturate come la messa: ogni momento è una casella che
+  aspetta il suo canto, e restano visibili anche vuote così si vede a colpo d'occhio
+  cosa manca. Chi vuole può aggiungere altri canti nello stesso momento (segnati
+  come *extra*) o fuori schema. Durante la messa si passa da un canto al successivo
+  senza tornare indietro, e lo schermo resta acceso.
 - **Arrangiamento per organo** per ogni canto, in una finestra separata dagli
   accordi per chitarra ma raggiungibile con un tocco: registrazione, note per
   l'organista e **spartito vero** scritto in notazione ABC.

@@ -109,34 +109,77 @@ export function setlistView(root, params, id) {
 
   root.append(el('div', { class: 'btn-row', style: 'margin:.8rem 0' }, [
     el('button', { class: 'btn primary', type: 'button', html: '+&nbsp; Aggiungi canti', onclick: () => navigate(`#/canti?aggiungi=${sl.id}`) }),
-    el('button', { class: 'btn', type: 'button', html: '&#128424;&nbsp; Stampa', onclick: () => navigate(`#/stampa?scaletta=${sl.id}`) }),
+    el('button', { class: 'btn', type: 'button', html: '&#128424;&#xFE0F;&nbsp; Stampa', onclick: () => navigate(`#/stampa?scaletta=${sl.id}`) }),
   ]));
 
-  if (!sl.items.length) {
-    root.append(el('div', { class: 'empty' }, [
-      el('strong', { text: 'Scaletta vuota' }),
-      el('span', { text: 'Aggiungi i canti scegliendo il momento della messa a cui appartengono.' }),
-    ]));
-  } else {
-    const wrap = el('div', { class: 'card', style: 'overflow:hidden;margin-top:.3rem' });
-    let lastMoment = '__none__';
-    sl.items.forEach((item, i) => {
-      if (item.moment !== lastMoment) {
-        lastMoment = item.moment;
-        wrap.append(el('div', {
-          style: 'padding:.5rem .75rem .25rem;font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--gold)',
-          text: item.moment ? momentLabel(item.moment) : 'Altro',
-        }));
-      }
-      wrap.append(itemRow(sl, item, i, repaint));
-    });
-    root.append(wrap);
+  // La messa ha una sua struttura fissa: ogni momento è una casella che aspetta
+  // il suo canto. Restano visibili anche vuote, così si vede cosa manca ancora.
+  const groups = new Map(MOMENTS.map((m) => [m.id, []]));
+  const extras = [];
+  sl.items.forEach((item, index) => {
+    if (item.moment && groups.has(item.moment)) groups.get(item.moment).push({ item, index });
+    else extras.push({ item, index });
+  });
 
-    root.append(el('p', {
-      style: 'color:var(--ink-faint);font-size:.78rem;margin-top:.7rem;text-align:center',
-      text: 'Tocca un canto per aprirlo; da lì puoi passare al successivo senza tornare indietro.',
-    }));
+  const coperti = MOMENTS.filter((m) => groups.get(m.id).length).length;
+  root.append(el('div', {
+    class: 'coverage', 'aria-label': `${coperti} momenti su ${MOMENTS.length} hanno un canto`,
+  }, [
+    el('div', { class: 'coverage-bar' }, MOMENTS.map((m) => el('span', {
+      class: `coverage-tick ${groups.get(m.id).length ? 'on' : ''}`.trim(),
+      title: m.label,
+    }))),
+    el('span', {
+      class: 'coverage-text',
+      text: coperti === MOMENTS.length
+        ? 'Tutti i momenti hanno un canto'
+        : `${coperti} moment${coperti === 1 ? 'o' : 'i'} su ${MOMENTS.length}`,
+    }),
+  ]));
+
+  const wrap = el('div', { class: 'card', style: 'overflow:hidden;margin-top:.6rem' });
+  let numero = 0;
+
+  for (const m of MOMENTS) {
+    const group = groups.get(m.id);
+    wrap.append(el('div', { class: 'sl-moment' }, [
+      el('span', { text: m.label }),
+      group.length > 1 ? el('span', { class: 'sl-count', text: `${group.length} canti` }) : null,
+    ]));
+    if (!group.length) {
+      wrap.append(el('button', {
+        class: 'sl-empty', type: 'button',
+        onclick: () => navigate(`#/canti?aggiungi=${sl.id}&momento=${m.id}`),
+      }, [el('span', { text: `+  Scegli il canto per ${m.label.toLowerCase()}` })]));
+      continue;
+    }
+    group.forEach((g, pos) => {
+      numero++;
+      wrap.append(itemRow(sl, g, numero, repaint, {
+        group, pos, extra: pos > 0,
+      }));
+    });
   }
+
+  wrap.append(el('div', { class: 'sl-moment' }, [
+    el('span', { text: 'Canti extra' }),
+    extras.length ? el('span', { class: 'sl-count', text: `${extras.length}` }) : null,
+  ]));
+  extras.forEach((g, pos) => {
+    numero++;
+    wrap.append(itemRow(sl, g, numero, repaint, { group: extras, pos, extra: false }));
+  });
+  wrap.append(el('button', {
+    class: 'sl-empty', type: 'button',
+    onclick: () => navigate(`#/canti?aggiungi=${sl.id}&momento=extra`),
+  }, [el('span', { text: '+  Aggiungi un canto fuori schema' })]));
+
+  root.append(wrap);
+
+  root.append(el('p', {
+    style: 'color:var(--ink-faint);font-size:.78rem;margin-top:.7rem;text-align:center',
+    text: 'Tocca un canto per aprirlo; da lì passi al successivo senza tornare indietro.',
+  }));
 
   if (sl.notes) {
     root.append(el('div', {
@@ -145,13 +188,17 @@ export function setlistView(root, params, id) {
   }
 }
 
-function itemRow(sl, item, index, repaint) {
+function itemRow(sl, entry, numero, repaint, { group, pos, extra }) {
+  const { item, index } = entry;
   const song = store.song(item.songId);
+
+  // Lo spostamento avviene dentro il momento: scambiare canti fra momenti
+  // diversi non avrebbe senso, li rimescolerebbe soltanto.
   const move = (delta) => {
+    const other = group[pos + delta];
+    if (!other) return;
     const items = [...sl.items];
-    const j = index + delta;
-    if (j < 0 || j >= items.length) return;
-    [items[index], items[j]] = [items[j], items[index]];
+    [items[index], items[other.index]] = [items[other.index], items[index]];
     store.saveSetlist({ ...sl, items });
     repaint();
   };
@@ -160,17 +207,28 @@ function itemRow(sl, item, index, repaint) {
     if (song) navigate(`#/canto/${encodeURIComponent(song.id)}?sl=${sl.id}`);
   };
 
+  const meta = song ? [song.key, song.bpm ? `${song.bpm} bpm` : null].filter(Boolean).join(' · ') : '';
+
   return el('div', { class: 'sl-item' }, [
-    el('span', { class: 'num', text: String(index + 1) }),
+    el('span', { class: 'num', text: String(numero) }),
     el('div', {
       class: 'grow', role: 'button', tabindex: '0', onclick: open,
       onkeydown: (e) => { if (e.key === 'Enter') open(); },
     }, [
-      el('div', { class: 't', text: song ? song.title : '(canto rimosso)' }),
-      el('div', { class: 'm', text: song ? [song.key, song.bpm ? `${song.bpm} bpm` : null].filter(Boolean).join(' · ') : '' }),
+      el('div', { class: 't' }, [
+        song ? song.title : '(canto rimosso)',
+        extra ? el('span', { class: 'sl-extra', text: 'extra' }) : null,
+      ]),
+      meta ? el('div', { class: 'm', text: meta }) : null,
     ]),
-    el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Sposta su', html: '&#9650;', style: 'min-width:2.2rem;font-size:.7rem', onclick: () => move(-1) }),
-    el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Sposta giù', html: '&#9660;', style: 'min-width:2.2rem;font-size:.7rem', onclick: () => move(1) }),
+    group.length > 1 ? el('button', {
+      class: 'icon-btn', type: 'button', 'aria-label': 'Sposta su', html: '&#9650;',
+      style: 'min-width:2.2rem;font-size:.7rem', disabled: pos === 0, onclick: () => move(-1),
+    }) : null,
+    group.length > 1 ? el('button', {
+      class: 'icon-btn', type: 'button', 'aria-label': 'Sposta giù', html: '&#9660;',
+      style: 'min-width:2.2rem;font-size:.7rem', disabled: pos === group.length - 1, onclick: () => move(1),
+    }) : null,
     el('button', {
       class: 'icon-btn', type: 'button', 'aria-label': 'Togli dalla scaletta', html: '&times;', style: 'min-width:2.2rem',
       onclick: () => {
@@ -202,7 +260,7 @@ function setlistMenu(sl, repaint) {
         const copy = store.saveSetlist({ date: nextSunday(), title: `${sl.title || 'Messa'} (copia)`, items: sl.items, notes: sl.notes });
         navigate(`#/scaletta/${copy.id}`);
       }),
-      item('Elimina scaletta', '&#128465;', async () => {
+      item('Elimina scaletta', '&#128465;&#xFE0F;', async () => {
         if (await confirmDialog('Eliminare la scaletta?', 'Verrà rimossa anche dagli altri dispositivi sincronizzati.', { danger: true, okLabel: 'Elimina' })) {
           store.deleteSetlist(sl.id);
           toast('Scaletta eliminata');

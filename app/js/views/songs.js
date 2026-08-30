@@ -8,8 +8,11 @@ import { navigate } from '../router.js';
 const ui = { q: '', moment: null, seasons: [], showFilters: false };
 
 export function songsView(root, params) {
-  const addTo = params.get('aggiungi');       // id scaletta in cui inserire
+  const addTo = params.get('aggiungi');         // id scaletta in cui inserire
   const setlist = addTo ? store.setlist(addTo) : null;
+  // momento già deciso: si arriva da una casella vuota della scaletta
+  const slot = setlist ? params.get('momento') : null;
+  const slotMoment = slot && slot !== 'extra' ? slot : null;
 
   clear(root);
   root.classList.remove('wide');
@@ -25,7 +28,10 @@ export function songsView(root, params) {
       style: 'padding:.7rem .85rem;margin-bottom:.8rem;display:flex;align-items:center;gap:.6rem',
     }, [
       el('div', { style: 'flex:1;min-width:0' }, [
-        el('div', { style: 'font-size:.72rem;color:var(--ink-faint);font-weight:700;letter-spacing:.06em;text-transform:uppercase', text: 'Aggiungi a' }),
+        el('div', {
+          style: 'font-size:.72rem;color:var(--ink-faint);font-weight:700;letter-spacing:.06em;text-transform:uppercase',
+          text: slotMoment ? `Canto per ${momentLabel(slotMoment).toLowerCase()}` : slot === 'extra' ? 'Canto extra' : 'Aggiungi a',
+        }),
         el('div', { style: 'font-weight:650', text: setlist.title || 'Scaletta' }),
       ]),
       el('button', {
@@ -70,7 +76,7 @@ export function songsView(root, params) {
       () => { ui.moment = ui.moment === m.id ? null : m.id; songsView(root, params); },
     )),
   ]);
-  root.append(momentChips);
+  if (!slotMoment) root.append(momentChips);
 
   if (ui.showFilters || ui.seasons.length) {
     root.append(el('div', { class: 'chips' }, SEASONS.map((s) => {
@@ -89,7 +95,8 @@ export function songsView(root, params) {
 
   function paint() {
     clear(listWrap);
-    const results = store.search(ui.q, { moment: ui.moment, seasons: ui.seasons });
+    const moment = slotMoment || ui.moment;
+    const results = store.search(ui.q, { moment, seasons: ui.seasons });
 
     if (!results.length) {
       listWrap.append(el('div', { class: 'empty' }, [
@@ -100,9 +107,9 @@ export function songsView(root, params) {
     }
 
     // Con ricerca o momento scelto: lista piatta. Altrimenti raggruppata.
-    if (ui.q || ui.moment) {
+    if (ui.q || moment) {
       listWrap.append(el('div', { class: 'section-title' }, [
-        el('span', { text: ui.moment ? momentLabel(ui.moment) : 'Risultati' }),
+        el('span', { text: moment ? momentLabel(moment) : 'Risultati' }),
         el('span', { class: 'count', text: `${results.length}` }),
       ]));
       listWrap.append(list(results));
@@ -150,7 +157,7 @@ export function songsView(root, params) {
 
     const open = () => {
       if (setlist) {
-        addToSetlist(setlist, s);
+        addToSetlist(setlist, s, slot);
       } else {
         navigate(`#/canto/${encodeURIComponent(s.id)}`);
       }
@@ -172,12 +179,17 @@ function chip(label, active, onclick) {
   });
 }
 
-/** Chiede in quale momento inserire il canto, poi lo aggiunge alla scaletta. */
-async function addToSetlist(setlist, song) {
+/**
+ * Aggiunge il canto alla scaletta. Se si arriva da una casella vuota il momento
+ * è già deciso; altrimenti si chiede, ma solo quando il canto ne ha più di uno.
+ */
+async function addToSetlist(setlist, song, slot = null) {
   const options = song.moments.length ? song.moments : MOMENTS.map((m) => m.id);
   let moment = options[0];
 
-  if (options.length > 1) {
+  if (slot) {
+    moment = slot === 'extra' ? null : slot;
+  } else if (options.length > 1) {
     moment = await modal('In quale momento?', (close) => el('div', {}, [
       el('p', { style: 'color:var(--ink-soft);margin-bottom:.7rem', text: song.title }),
       el('div', { class: 'btn-row' }, options.map((m) => el('button', {
@@ -192,7 +204,9 @@ async function addToSetlist(setlist, song) {
   const items = [...fresh.items, { songId: song.id, moment, note: '' }];
   items.sort((a, b) => rank(a.moment) - rank(b.moment));
   store.saveSetlist({ ...fresh, items });
-  toast(`${song.title} → ${momentLabel(moment)}`);
+  toast(`${song.title} → ${moment ? momentLabel(moment) : 'canti extra'}`);
+  // partiti da una casella vuota: si torna alla scaletta, che è il punto di arrivo
+  if (slot) navigate(`#/scaletta/${fresh.id}`);
 }
 
 const rank = (id) => {
