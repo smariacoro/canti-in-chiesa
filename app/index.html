@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Canti in Chiesa</title>
+<meta name="description" content="I canti del coro della Basilica Santuario Madre del Buon Consiglio, sempre disponibili anche senza rete.">
+<meta name="theme-color" content="#7B2D26" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16130F" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Canti">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<div id="splash" class="splash">
+  <img src="icons/logo.png" alt="" width="70">
+  <p>Canti in Chiesa</p>
+</div>
+
+<header class="appbar" id="appbar">
+  <div class="appbar-main">
+    <img class="appbar-logo" src="icons/logo.png" alt="Stemma della Basilica" width="28">
+    <div class="appbar-titles">
+      <h1>Canti in Chiesa</h1>
+      <p id="appbar-sub">Basilica Madre del Buon Consiglio</p>
+    </div>
+    <button class="icon-btn" id="btn-sync" type="button" title="Stato sincronizzazione" aria-label="Stato sincronizzazione">
+      <span class="sync-dot" id="sync-dot"></span>
+    </button>
+    <button class="icon-btn" id="btn-settings" type="button" title="Impostazioni" aria-label="Impostazioni">&#9881;</button>
+  </div>
+</header>
+
+<main id="view" class="view" tabindex="-1"></main>
+
+<nav class="tabbar" id="tabbar">
+  <a href="#/canti" data-tab="canti"><span class="tab-ico">&#9834;</span><span>Canti</span></a>
+  <a href="#/scalette" data-tab="scalette"><span class="tab-ico">&#128197;</span><span>Scalette</span></a>
+  <a href="#/stampa" data-tab="stampa"><span class="tab-ico">&#128424;</span><span>Stampa</span></a>
+</nav>
+
+<div id="modal-root"></div>
+<div id="toast-root" class="toast-root" aria-live="polite"></div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

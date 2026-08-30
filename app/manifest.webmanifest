@@ -1,0 +1,23 @@
+{
+  "name": "Canti in Chiesa",
+  "short_name": "Canti",
+  "description": "I canti del coro della Basilica Santuario Madre del Buon Consiglio, sempre disponibili anche senza rete.",
+  "lang": "it",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#FBF7EF",
+  "theme_color": "#7B2D26",
+  "categories": ["music", "lifestyle"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Scalette", "url": "./#/scalette" },
+    { "name": "Cerca un canto", "url": "./#/canti" }
+  ]
+}
