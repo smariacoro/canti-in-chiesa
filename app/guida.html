@@ -167,6 +167,36 @@ header h1 {
 .btn-copy:hover { background: var(--lapis); color: var(--ground); }
 .btn-copy.done { background: var(--lapis); color: var(--ground); }
 
+/* -------------------------------------------------------------- le due parti */
+/* Prima si installa (una volta sola), poi si usa (sempre): tenerle separate
+   evita che chi ha già l'app rilegga le istruzioni di installazione. */
+
+.part {
+  background: var(--lapis);
+  color: var(--ground);
+  border-radius: 16px;
+  padding: 1.7rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  margin-top: 1rem;
+}
+.part .num {
+  font-size: .76rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  font-weight: 700;
+  opacity: .7;
+}
+.part h2 {
+  font-family: var(--serif);
+  font-size: clamp(1.8rem, 6.5vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+}
+.part p { font-size: 1.02rem; opacity: .88; margin-top: .25rem; }
+
 /* ------------------------------------------------------------------ scelta */
 
 .pick {
@@ -189,6 +219,17 @@ header h1 {
 .pick a:hover, .pick a:focus-visible { border-color: var(--lapis); transform: translateY(-2px); }
 .pick .big { font-size: 1.45rem; font-weight: 700; }
 .pick .small { font-size: .95rem; color: var(--ink-soft); }
+
+.skip {
+  margin-top: -1.4rem;
+  font-size: .97rem;
+}
+.skip a {
+  color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.skip a:hover { color: var(--lapis); }
 
 /* ---------------------------------------------------------------- sezioni */
 
@@ -322,7 +363,15 @@ a { color: var(--lapis); }
 @media print {
   body { background: #fff; color: #000; font-size: 12pt; }
   .wrap { max-width: none; padding: 0; gap: 1.5rem; }
-  .pick, .btn-copy { display: none; }
+  .pick, .btn-copy, .skip { display: none; }
+  .part {
+    background: none; color: #000; border-radius: 0;
+    padding: 0 0 2mm; margin-top: 4mm;
+    border-bottom: 2pt solid #000;
+    break-after: avoid;
+  }
+  .part .num { opacity: 1; color: #555; }
+  .part p { opacity: 1; color: #333; }
   .address .url { color: #000; text-decoration: none; }
   section { break-inside: avoid; }
   .steps li { break-inside: avoid; }
@@ -354,6 +403,12 @@ a { color: var(--lapis); }
     <b>Copia l'indirizzo</b> qui sopra e incollalo in Safari (iPhone) o Chrome (Android).
   </div>
 
+  <div class="part">
+    <span class="num">Prima parte</span>
+    <h2>Installarla</h2>
+    <p>Si fa una volta sola, in due minuti. Scegli qui sotto che apparecchio usi.</p>
+  </div>
+
   <div class="pick">
     <a href="#iphone">
       <span class="big">Ho un iPhone</span>
@@ -368,6 +423,8 @@ a { color: var(--lapis); }
       <span class="small">Windows o Mac: non serve installare niente</span>
     </a>
   </div>
+
+  <p class="skip"><a href="#usarla">Ce l'ho già installata &rarr; portami direttamente a come si usa</a></p>
 
   <!-- ------------------------------------------------------------ iPhone -->
   <section id="iphone">
@@ -511,6 +568,12 @@ a { color: var(--lapis); }
     </ol>
   </section>
 
+  <div class="part" id="usarla">
+    <span class="num">Seconda parte</span>
+    <h2>Usarla</h2>
+    <p>Da qui in poi vale per tutti, telefono o computer che sia: l'app è la stessa.</p>
+  </div>
+
   <!-- ------------------------------------------------------------- primo uso -->
   <section id="primo-uso">
     <h2>La prima volta che la apri</h2>
@@ -524,8 +587,9 @@ a { color: var(--lapis); }
       <li><div class="body">
         <h3>Accedi con la tua email</h3>
         <p>Tocca l'ingranaggio in alto a destra, poi <strong>Accedi</strong>. Riceverai una email di
-          conferma: aprila, tocca il link e sei dentro. Serve per vedere la scaletta preparata dal
-          maestro — senza accedere i canti si leggono lo stesso.</p>
+          conferma: aprila, tocca il link e sei dentro. Serve per le scalette: <strong>chiunque del
+          coro ne prepara una e la vedono tutti gli altri</strong>. Senza accedere i canti si
+          leggono lo stesso.</p>
       </div></li>
 
       <li><div class="body">
@@ -607,6 +671,11 @@ a { color: var(--lapis); }
       <div>
         <h3>Preparare la scaletta della messa</h3>
         <dl>
+          <dt>Chi la prepara</dt>
+          <dd>Chiunque del coro. Non c'è un incaricato: la mette uno e la vedono tutti gli altri
+            sul loro telefono, senza doversi passare niente. Mettetevi d'accordo su chi la fa,
+            per non ritrovarvi con due scalette per la stessa domenica.</dd>
+
           <dt>Crearne una nuova</dt>
           <dd>In basso tocca <b>Scalette</b>, poi <b>+ Nuova</b>. Scegli la data (la domenica
             successiva è già proposta) e, se vuoi, un nome come «Messa delle 11».</dd>
@@ -631,6 +700,10 @@ a { color: var(--lapis); }
           <dt>Togliere un canto</dt>
           <dd>Il tasto <b>×</b> alla sua destra. Non cancella il canto: lo toglie solo da questa
             scaletta.</dd>
+
+          <dt>Quando arriva agli altri</dt>
+          <dd>Da sola, appena il loro telefono ha un po' di rete. Non c'è niente da inviare né da
+            confermare.</dd>
         </dl>
       </div>
 
@@ -700,8 +773,8 @@ a { color: var(--lapis); }
       </div>
       <div>
         <h3>In chiesa non prende: funziona lo stesso?</h3>
-        <p>Sì. I canti sono salvati dentro il telefono. Serve internet solo la prima volta e quando
-          il maestro cambia la scaletta.</p>
+        <p>Sì. I canti sono salvati dentro il telefono. Serve internet solo la prima volta e per
+          ricevere le scalette che preparano gli altri.</p>
       </div>
       <div>
         <h3>Lo schermo si spegne mentre canto</h3>
