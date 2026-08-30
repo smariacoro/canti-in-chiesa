@@ -27,7 +27,11 @@ jobs:
       - name: Controlla che il catalogo sia valido
         run: python -c "import json;d=json.load(open('app/data/songs.json',encoding='utf-8'));print(len(d['songs']),'canti')"
 
+      # enablement: prova ad attivare Pages da sola, se non è ancora stato fatto
+      # a mano in Settings > Pages > Source: GitHub Actions.
       - uses: actions/configure-pages@v5
+        with:
+          enablement: true
 
       - name: Prepara i file da pubblicare
         uses: actions/upload-pages-artifact@v3

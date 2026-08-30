@@ -256,6 +256,39 @@ function authDialog(mode, repaint) {
   });
 }
 
+/** Aperta quando si torna dall'email di recupero password. */
+export function newPasswordDialog() {
+  return modal('Scegli una nuova password', (close) => {
+    const pass = el('input', { class: 'input', type: 'password', autocomplete: 'new-password', placeholder: 'Almeno 6 caratteri' });
+    const msg = el('p', { style: 'font-size:.85rem;color:var(--warn);min-height:1.2rem' });
+    const submit = el('button', { class: 'btn primary', type: 'submit', text: 'Salva password' });
+
+    return el('form', {
+      onsubmit: async (e) => {
+        e.preventDefault();
+        msg.textContent = '';
+        submit.disabled = true;
+        try {
+          await sync.setPassword(pass.value);
+          toast('Password aggiornata');
+          close(true);
+        } catch (err) {
+          msg.textContent = traduci(err.message);
+          submit.disabled = false;
+        }
+      },
+    }, [
+      el('p', { style: 'color:var(--ink-soft);margin-bottom:.8rem', text: 'Sei entrato dal link ricevuto per email. Imposta la password che userai d’ora in poi.' }),
+      el('label', { class: 'field' }, [el('span', { text: 'Nuova password' }), pass]),
+      msg,
+      el('div', { class: 'modal-foot' }, [
+        el('button', { class: 'btn ghost', type: 'button', text: 'Più tardi', onclick: () => close(false) }),
+        submit,
+      ]),
+    ]);
+  });
+}
+
 function traduci(message = '') {
   const m = message.toLowerCase();
   if (m.includes('invalid login')) return 'Email o password non corretti.';

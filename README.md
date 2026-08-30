@@ -61,6 +61,11 @@ telefono. Il progetto Supabase è già collegato in `app/config.js`
 1. In **SQL Editor** incolla ed esegui `supabase/schema.sql`.
 2. In **Project Settings → API Keys** copia la chiave *anon public* dentro
    `SUPABASE_ANON_KEY` in `app/config.js`.
+3. In **Authentication → URL Configuration** metti l'indirizzo dell'app come
+   **Site URL**, e aggiungilo anche in **Redirect URLs**. Senza questo passaggio
+   il link di conferma nell'email punta a `http://localhost:3000`, che sul
+   telefono non esiste: l'account viene comunque attivato, ma l'utente vede una
+   pagina di errore.
 
 Poi pubblica di nuovo: da *Impostazioni → Coro condiviso* ognuno si crea
 l'account.

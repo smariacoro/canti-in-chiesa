@@ -8,7 +8,7 @@ import { songsView } from './views/songs.js';
 import { songView, leaveSong } from './views/song.js';
 import { setlistsView, setlistView } from './views/setlists.js';
 import { printView } from './views/print.js';
-import { settingsView, applyTheme } from './views/settings.js';
+import { settingsView, applyTheme, newPasswordDialog } from './views/settings.js';
 import { PARISH_NAME } from '../config.js';
 
 const view = $('#view');
@@ -73,6 +73,22 @@ function paintSyncDot() {
   }[dot.dataset.state] || 'Sincronizzazione';
 }
 
+async function handleAuthRedirect({ type, error }) {
+  if (error) {
+    toast(error.includes('expired') ? 'Il link è scaduto: richiedine un altro.' : error, 6000);
+    navigate('#/impostazioni');
+    return;
+  }
+  const user = await sync.loadUser();
+  if (type === 'recovery') {
+    await newPasswordDialog();
+    navigate('#/impostazioni');
+  } else {
+    toast(user && user.name ? `Benvenuto, ${user.name}` : 'Account confermato', 4000);
+  }
+  sync.sync();
+}
+
 async function boot() {
   applyPrefs();
   $('#appbar-sub').textContent = PARISH_NAME;
@@ -103,9 +119,14 @@ async function boot() {
     toast(await sync.sync() ? 'Sincronizzato' : 'Sincronizzazione non riuscita');
   });
 
+  // Ritorno dal link nell'email (conferma account o recupero password).
+  const redirect = sync.consumeAuthRedirect();
+
   // Un canto aperto resta aperto anche riavviando l'app: comodo durante la messa.
   if (!location.hash) navigate('#/canti', { replace: true });
   startRouter(route);
+
+  if (redirect) handleAuthRedirect(redirect);
 
   const splash = $('#splash');
   splash.classList.add('gone');

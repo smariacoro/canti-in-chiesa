@@ -75,8 +75,14 @@ class Sync extends EventTarget {
       if (ok) return this._fetch(path, { method, body, headers, auth, retry: false });
     }
     if (!res.ok) {
-      let detail = '';
-      try { detail = (await res.json()).message || (await res.text()); } catch (e) { /* corpo vuoto */ }
+      // Il corpo si può leggere una volta sola: prima il testo, poi si prova a
+      // interpretarlo. L'autenticazione usa "msg", le tabelle usano "message".
+      const raw = await res.text().catch(() => '');
+      let detail = raw;
+      try {
+        const j = JSON.parse(raw);
+        detail = j.msg || j.message || j.error_description || j.error || j.hint || raw;
+      } catch (e) { /* non era JSON: tengo il testo così com'è */ }
       throw new Error(detail || `Errore ${res.status}`);
     }
     if (res.status === 204) return null;
@@ -96,7 +102,9 @@ class Sync extends EventTarget {
   }
 
   async signUp(email, password, name) {
-    const data = await this._fetch('/auth/v1/signup', {
+    // redirect_to esplicito: così il link nell'email riporta all'app anche se il
+    // "Site URL" del progetto Supabase non e' stato aggiornato.
+    const data = await this._fetch(`/auth/v1/signup?redirect_to=${encodeURIComponent(appUrl())}`, {
       method: 'POST',
       body: { email, password, data: { name: name || '' } },
       auth: false,
@@ -114,7 +122,55 @@ class Sync extends EventTarget {
   }
 
   async resetPassword(email) {
-    return this._fetch('/auth/v1/recover', { method: 'POST', body: { email }, auth: false });
+    return this._fetch(`/auth/v1/recover?redirect_to=${encodeURIComponent(appUrl())}`, {
+      method: 'POST', body: { email }, auth: false,
+    });
+  }
+
+  async setPassword(password) {
+    const data = await this._fetch('/auth/v1/user', { method: 'PUT', body: { password } });
+    if (data) this.session.user = userFrom(data);
+    localStorage.setItem(AUTH_KEY, JSON.stringify(this.session));
+    return data;
+  }
+
+  /** Recupera il profilo quando la sessione arriva dal link nell'email. */
+  async loadUser() {
+    try {
+      const data = await this._fetch('/auth/v1/user');
+      if (data) {
+        this.session.user = userFrom(data);
+        localStorage.setItem(AUTH_KEY, JSON.stringify(this.session));
+      }
+    } catch (e) { /* riproveremo alla prossima sincronizzazione */ }
+    return this.user;
+  }
+
+  /**
+   * Consuma i token che Supabase appende all'indirizzo dopo la conferma via
+   * email o il recupero password. Senza questo l'utente tornerebbe sull'app
+   * con un indirizzo indecifrabile e resterebbe fuori.
+   * @returns {null | {type: string, error: string|null}}
+   */
+  consumeAuthRedirect() {
+    const raw = location.hash.replace(/^#/, '');
+    // le rotte normali cominciano con "/": qui interessa solo il resto
+    if (!raw || raw.startsWith('/')) return null;
+
+    const p = new URLSearchParams(raw);
+    const error = p.get('error_description') || p.get('error');
+    const token = p.get('access_token');
+    const type = p.get('type') || '';
+    if (!token && !error) return null;
+
+    if (token) {
+      this._store({
+        access_token: token,
+        refresh_token: p.get('refresh_token'),
+      });
+    }
+    history.replaceState(null, '', location.pathname + location.search + '#/canti');
+    return { type, error };
   }
 
   _store(data) {
@@ -122,7 +178,7 @@ class Sync extends EventTarget {
     this.session = {
       access_token: data.access_token,
       refresh_token: data.refresh_token,
-      user: data.user ? { id: data.user.id, email: data.user.email, name: (data.user.user_metadata || {}).name || '' } : null,
+      user: data.user ? userFrom(data.user) : (this.session && this.session.user) || null,
     };
     localStorage.setItem(AUTH_KEY, JSON.stringify(this.session));
     this._set('ok');
@@ -217,6 +273,16 @@ class Sync extends EventTarget {
       pulledAt: stamps.length ? stamps[stamps.length - 1] : store.state.pulledAt,
     });
   }
+}
+
+/** Indirizzo dell'app, da passare a Supabase per i link nelle email. */
+function appUrl() {
+  return location.origin + location.pathname.replace(/index\.html$/, '');
+}
+
+function userFrom(u) {
+  if (!u) return null;
+  return { id: u.id, email: u.email, name: (u.user_metadata || {}).name || '' };
 }
 
 function stripLocal(rec) {
