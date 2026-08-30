@@ -123,6 +123,10 @@ export function settingsView(root) {
       el('span', { style: 'color:var(--ink-faint)', text: 'Funziona anche senza rete: i canti sono salvati sul dispositivo.' }),
     ]),
     el('div', { class: 'btn-row', style: 'margin-top:.7rem' }, [
+      el('a', {
+        class: 'btn small', href: 'guida.html', target: '_blank', rel: 'noopener',
+        text: 'Guida per il coro',
+      }),
       el('button', {
         class: 'btn small ghost', type: 'button', text: 'Cerca aggiornamenti',
         onclick: async () => {

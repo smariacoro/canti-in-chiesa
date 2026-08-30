@@ -1,0 +1,775 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Come installare e usare l'app dei canti del coro, passo passo.">
+<meta name="theme-color" content="#1F3D7A">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Canti in Chiesa sul telefono</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Newsreader:opsz,wght@6..72,400;6..72,600&display=swap">
+</head>
+<body>
+<style>
+:root {
+  --ground:      #FFFFFF;
+  --paper:       #F1F3F8;
+  --paper-edge:  #DCE0EC;
+  --ink:         #14161D;
+  --ink-soft:    #4E5464;
+  --ink-faint:   #7C8296;
+  --lapis:       #1F3D7A;
+  --lapis-soft:  #E3E9F7;
+  --lapis-edge:  #B9C6E4;
+  --gold:        #9A7412;
+
+  --sans: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --serif: "Newsreader", Georgia, "Times New Roman", serif;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground:     #0F1116;
+    --paper:      #191C25;
+    --paper-edge: #2C3140;
+    --ink:        #ECEEF4;
+    --ink-soft:   #AEB4C4;
+    --ink-faint:  #7C8296;
+    --lapis:      #9CB6EC;
+    --lapis-soft: #1B2436;
+    --lapis-edge: #35425C;
+    --gold:       #E0BC63;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --ground:     #0F1116;
+  --paper:      #191C25;
+  --paper-edge: #2C3140;
+  --ink:        #ECEEF4;
+  --ink-soft:   #AEB4C4;
+  --ink-faint:  #7C8296;
+  --lapis:      #9CB6EC;
+  --lapis-soft: #1B2436;
+  --lapis-edge: #35425C;
+  --gold:       #E0BC63;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 19px;
+  line-height: 1.6;
+}
+
+.wrap {
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.75rem;
+}
+
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+p { margin: 0; }
+strong { font-weight: 700; }
+
+/* ---------------------------------------------------------------- testata */
+
+.crest {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  font-size: .8rem;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-weight: 700;
+}
+.crest::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--paper-edge);
+}
+
+header h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.4rem, 8vw, 3.6rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin: .9rem 0 .7rem;
+}
+
+.lede {
+  font-size: 1.2rem;
+  color: var(--ink-soft);
+  max-width: 34rem;
+}
+
+/* --------------------------------------------------------------- indirizzo */
+
+.address {
+  background: var(--lapis-soft);
+  border: 1px solid var(--lapis-edge);
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.address .label {
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: var(--lapis);
+}
+.address .url {
+  display: inline-block;
+  font-size: clamp(1.05rem, 4.2vw, 1.5rem);
+  font-weight: 700;
+  color: var(--lapis);
+  word-break: break-all;
+  line-height: 1.3;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.address .url:hover { color: var(--ink); }
+.address .note { font-size: .95rem; color: var(--ink-soft); }
+
+.address .actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.btn-copy {
+  font: inherit;
+  font-size: .95rem;
+  font-weight: 700;
+  padding: .6rem 1.1rem;
+  border-radius: 10px;
+  border: 2px solid var(--lapis);
+  background: transparent;
+  color: var(--lapis);
+  cursor: pointer;
+}
+.btn-copy:hover { background: var(--lapis); color: var(--ground); }
+.btn-copy.done { background: var(--lapis); color: var(--ground); }
+
+/* ------------------------------------------------------------------ scelta */
+
+.pick {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+.pick a {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  padding: 1.35rem 1.5rem;
+  border: 2px solid var(--paper-edge);
+  border-radius: 14px;
+  background: var(--paper);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.pick a:hover, .pick a:focus-visible { border-color: var(--lapis); transform: translateY(-2px); }
+.pick .big { font-size: 1.45rem; font-weight: 700; }
+.pick .small { font-size: .95rem; color: var(--ink-soft); }
+
+/* ---------------------------------------------------------------- sezioni */
+
+section h2 {
+  font-family: var(--serif);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding-bottom: .7rem;
+  border-bottom: 3px solid var(--lapis);
+  margin-bottom: 1.75rem;
+}
+
+.steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  counter-reset: step;
+}
+.steps li {
+  display: grid;
+  grid-template-columns: 2.9rem 1fr;
+  gap: 1.1rem;
+  align-items: start;
+}
+.steps li::before {
+  counter-increment: step;
+  content: counter(step);
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--lapis);
+  background: var(--lapis-soft);
+  border-radius: 50%;
+  width: 2.9rem;
+  height: 2.9rem;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.steps .body { display: flex; flex-direction: column; gap: .45rem; padding-top: .35rem; }
+.steps h3 { font-size: 1.15rem; font-weight: 700; }
+.steps p { color: var(--ink-soft); }
+
+.glyph {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 8px;
+  padding: .3rem .6rem;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--ink);
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.glyph svg { display: block; }
+
+.aside {
+  background: var(--paper);
+  border-left: 4px solid var(--gold);
+  border-radius: 0 10px 10px 0;
+  padding: .9rem 1.1rem;
+  font-size: .97rem;
+  color: var(--ink-soft);
+}
+.aside b { color: var(--ink); }
+
+/* ----------------------------------------------------------- come si fa */
+
+.howto { display: flex; flex-direction: column; gap: 2rem; }
+
+.howto h3 {
+  font-family: var(--serif);
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--lapis);
+  padding-bottom: .4rem;
+  border-bottom: 1px solid var(--paper-edge);
+  margin-bottom: 1rem;
+}
+
+.howto dl { margin: 0; display: flex; flex-direction: column; gap: 1rem; }
+.howto dt { font-weight: 700; font-size: 1.05rem; }
+.howto dd { margin: .2rem 0 0; color: var(--ink-soft); }
+
+.key {
+  display: inline-block;
+  font-weight: 700;
+  font-size: .9em;
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  padding: .05em .45em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------ dubbi */
+
+.faq { display: flex; flex-direction: column; gap: 1.1rem; }
+.faq div {
+  background: var(--paper);
+  border: 1px solid var(--paper-edge);
+  border-radius: 12px;
+  padding: 1.1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+.faq h3 { font-size: 1.05rem; font-weight: 700; }
+.faq p { color: var(--ink-soft); font-size: .97rem; }
+
+a { color: var(--lapis); }
+:focus-visible { outline: 3px solid var(--lapis); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+
+@media print {
+  body { background: #fff; color: #000; font-size: 12pt; }
+  .wrap { max-width: none; padding: 0; gap: 1.5rem; }
+  .pick, .btn-copy { display: none; }
+  .address .url { color: #000; text-decoration: none; }
+  section { break-inside: avoid; }
+  .steps li { break-inside: avoid; }
+}
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="crest">Coro della Basilica Madre del Buon Consiglio</div>
+    <h1>Canti in Chiesa sul telefono</h1>
+    <p class="lede">Tutti i canti del coro, sul telefono e al computer. Una volta installata funziona
+      <strong>anche senza internet</strong>: in chiesa si apre subito, pure se il telefono non prende.</p>
+  </header>
+
+  <div class="address">
+    <div class="label">L'indirizzo dell'app</div>
+    <a class="url" id="app-url" href="https://smariacoro.github.io/canti-in-chiesa/" target="_blank" rel="noopener">https://smariacoro.github.io/canti-in-chiesa/</a>
+    <div class="actions">
+      <button class="btn-copy" id="copy-url" type="button">Copia l'indirizzo</button>
+    </div>
+    <p class="note">Toccalo per aprirlo subito, oppure copialo e incollalo nel browser.
+      Serve una volta sola: dopo averlo installato non ti servirà più.</p>
+  </div>
+
+  <div class="aside">
+    <b>Se apri questa pagina da WhatsApp o dalla posta:</b> toccando il link potrebbe aprirsi una
+    finestrella interna all'app, dove il pulsante per installare non c'è. In quel caso premi
+    <b>Copia l'indirizzo</b> qui sopra e incollalo in Safari (iPhone) o Chrome (Android).
+  </div>
+
+  <div class="pick">
+    <a href="#iphone">
+      <span class="big">Ho un iPhone</span>
+      <span class="small">Vai alle istruzioni per iPhone e iPad</span>
+    </a>
+    <a href="#android">
+      <span class="big">Ho un Android</span>
+      <span class="small">Samsung, Xiaomi, Huawei, Motorola…</span>
+    </a>
+    <a href="#computer">
+      <span class="big">Sono al computer</span>
+      <span class="small">Windows o Mac: non serve installare niente</span>
+    </a>
+  </div>
+
+  <!-- ------------------------------------------------------------ iPhone -->
+  <section id="iphone">
+    <h2>Se hai un iPhone</h2>
+
+    <div class="aside" style="margin-bottom:1.5rem">
+      <b>Importante:</b> su iPhone deve essere usato <b>Safari</b>, la bussola azzurra.
+      Con Chrome o Firefox il pulsante per installare non compare.
+    </div>
+
+    <ol class="steps">
+      <li><div class="body">
+        <h3>Apri Safari</h3>
+        <p>È l'icona con la bussola azzurra, quella che usi di solito per andare su internet.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Scrivi l'indirizzo dell'app</h3>
+        <p>Toccando la barra in alto e scrivendolo per intero, come lo vedi scritto sopra. Poi tocca <strong>Vai</strong>.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Aspetta che compaia lo stemma della Basilica</h3>
+        <p>La prima volta ci mette qualche secondo: sta scaricando tutti i canti nel telefono.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Tocca il pulsante Condividi</h3>
+        <p>È il quadratino con la freccia che punta in su, in fondo allo schermo (su iPad è in alto a destra).</p>
+        <p><span class="glyph"><svg width="15" height="19" viewBox="0 0 15 19" fill="none" aria-hidden="true"><path d="M7.5 1v11M7.5 1L4 4.5M7.5 1L11 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 8H1.5v9.5h12V8h-1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg> questo pulsante</span></p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Scorri e tocca «Aggiungi a Home»</h3>
+        <p>Si apre un elenco lungo: trascinalo verso l'alto finché non trovi la voce
+          <strong>Aggiungi a Home</strong> (in alcuni telefoni si chiama <em>Aggiungi alla schermata Home</em>).</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Tocca «Aggiungi» in alto a destra</h3>
+        <p>Fatto. Sulla schermata del telefono, insieme alle altre app, è comparso lo stemma
+          della Basilica con scritto <strong>Canti</strong>. Da adesso apri quello.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- ----------------------------------------------------------- Android -->
+  <section id="android">
+    <h2>Se hai un Android</h2>
+
+    <div class="aside" style="margin-bottom:1.5rem">
+      <b>Importante:</b> su Android va usato <b>Chrome</b>, il cerchio colorato rosso, giallo e verde.
+    </div>
+
+    <ol class="steps">
+      <li><div class="body">
+        <h3>Apri Chrome</h3>
+        <p>È l'icona rotonda coi colori rosso, giallo e verde.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Scrivi l'indirizzo dell'app</h3>
+        <p>Nella barra in alto, per intero come lo vedi scritto sopra. Poi tocca il tasto <strong>invio</strong>.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Aspetta che compaia lo stemma della Basilica</h3>
+        <p>La prima volta ci mette qualche secondo: sta scaricando tutti i canti nel telefono.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Tocca i tre puntini in alto a destra</h3>
+        <p>Su alcuni telefoni sono in basso. Si apre un elenco di voci.</p>
+        <p><span class="glyph"><svg width="6" height="20" viewBox="0 0 6 20" aria-hidden="true"><circle cx="3" cy="3" r="1.9" fill="currentColor"/><circle cx="3" cy="10" r="1.9" fill="currentColor"/><circle cx="3" cy="17" r="1.9" fill="currentColor"/></svg> questi puntini</span></p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Tocca «Installa app»</h3>
+        <p>Se non la vedi, cerca <strong>Aggiungi a schermata Home</strong>: è la stessa cosa.
+          A volte Chrome propone da solo una striscia in basso con scritto <em>Installa</em>: va benissimo toccare quella.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Conferma toccando «Installa»</h3>
+        <p>Fatto. Fra le tue app è comparso lo stemma della Basilica con scritto
+          <strong>Canti</strong>. Da adesso apri quello.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- ---------------------------------------------------------- computer -->
+  <section id="computer">
+    <h2>Se sei al computer</h2>
+
+    <div class="aside" style="margin-bottom:1.5rem">
+      <b>Buona notizia:</b> al computer non c'è niente da installare. Basta aprire l'indirizzo.
+      È il posto migliore per preparare le scalette e per stampare i canti.
+    </div>
+
+    <ol class="steps">
+      <li><div class="body">
+        <h3>Apri l'indirizzo nel browser</h3>
+        <p>Va bene qualunque browser: Chrome, Edge, Firefox o Safari. Funziona subito,
+          esattamente come sul telefono.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Mettilo tra i preferiti</h3>
+        <p>Premi <strong>Ctrl + D</strong> (su Mac <strong>Cmd + D</strong>) e dai invio: così lo
+          ritrovi senza doverlo riscrivere.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Se vuoi, tienila come un programma a parte</h3>
+        <p>Con Chrome o Edge, in fondo alla barra dell'indirizzo compare una piccola icona di
+          installazione: cliccandola l'app si apre in una finestra sua, senza le barre del browser.
+          È comodo ma del tutto facoltativo.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Ingrandisci le scritte con la tastiera</h3>
+        <p>Tieni premuto <strong>Ctrl</strong> e premi <strong>+</strong> o <strong>−</strong>
+          (su Mac <strong>Cmd</strong>). Dentro l'app ci sono anche i tasti <strong>− Aa +</strong>,
+          che ingrandiscono solo il testo dei canti.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Stampa il libretto dei canti</h3>
+        <p>In fondo alla pagina scegli <strong>Stampa</strong>. Puoi stampare tutti i canti, una
+          singola scaletta o solo quelli che scegli tu: viene fuori un libretto con la copertina e
+          l'indice numerato, nello stesso ordine dell'app.</p>
+        <p>Nella finestra di stampa, alla voce <em>Destinazione</em>, puoi scegliere
+          <strong>Salva come PDF</strong> invece della stampante: così lo mandi a chi vuoi.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Prepara le scalette con calma</h3>
+        <p>Con tastiera e schermo grande è molto più veloce che sul telefono. Quello che salvi qui
+          arriva da solo sui telefoni di tutto il coro, purché tu abbia fatto l'accesso.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- ------------------------------------------------------------- primo uso -->
+  <section id="primo-uso">
+    <h2>La prima volta che la apri</h2>
+    <ol class="steps">
+      <li><div class="body">
+        <h3>Guarda i canti</h3>
+        <p>Sono già tutti dentro, divisi per momento della messa: Ingresso, Gloria, Al Vangelo,
+          Offertorio, Santo, Comunione, Finale. Dentro ogni momento sono in ordine alfabetico.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Accedi con la tua email</h3>
+        <p>Tocca l'ingranaggio in alto a destra, poi <strong>Accedi</strong>. Riceverai una email di
+          conferma: aprila, tocca il link e sei dentro. Serve per vedere la scaletta preparata dal
+          maestro — senza accedere i canti si leggono lo stesso.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Ingrandisci le scritte come ti fa comodo</h3>
+        <p>Aprendo un canto, i tasti <strong>− Aa +</strong> in alto ingrandiscono il testo.
+          Rimane come lo lasci, anche le volte successive.</p>
+      </div></li>
+
+      <li><div class="body">
+        <h3>Poi guarda qui sotto</h3>
+        <p>Nella sezione <strong>Come si fa ogni cosa</strong> trovi, spiegata riga per riga,
+          ogni funzione: cercare, intonare, preparare la scaletta, stampare.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <!-- ----------------------------------------------------------- come si fa -->
+  <section id="come-si-fa">
+    <h2>Come si fa ogni cosa</h2>
+
+    <div class="howto">
+
+      <div>
+        <h3>Trovare e leggere un canto</h3>
+        <dl>
+          <dt>Cercarlo per nome</dt>
+          <dd>Scrivi qualche lettera nella riga di ricerca in alto. Funziona anche a metà parola,
+            e gli accenti non contano: «perche» trova «Perché Tu sei qui con me».</dd>
+
+          <dt>Cercarlo per una frase del testo</dt>
+          <dd>Non ricordi il titolo ma ricordi le parole? Scrivi quelle: la ricerca guarda dentro
+            tutti i canti, non solo nei titoli.</dd>
+
+          <dt>Sfogliarli per momento della messa</dt>
+          <dd>Sotto la ricerca ci sono i tasti Ingresso, Gloria, Al Vangelo, Offertorio, Santo,
+            Comunione, Finale. Dentro ognuno i canti sono in ordine alfabetico.</dd>
+
+          <dt>Filtrare per periodo dell'anno</dt>
+          <dd>Il tasto con le tre righine ☰ accanto alla ricerca mostra Avvento, Natale,
+            Quaresima, Pasqua, canti mariani e così via.</dd>
+
+          <dt>Ingrandire il testo</dt>
+          <dd>Dentro un canto, i tasti <span class="key">−</span> <span class="key">Aa</span>
+            <span class="key">+</span> in alto. Resta come lo lasci, anche la prossima volta.
+            Per ingrandire i pulsanti, apri l'ingranaggio in alto a destra.</dd>
+
+          <dt>Nascondere gli accordi</dt>
+          <dd>Il tasto <b>Accordi</b> in alto li fa sparire: se non suoni, il testo si legge molto
+            meglio così.</dd>
+        </dl>
+      </div>
+
+      <div>
+        <h3>Intonare e tenere il tempo</h3>
+        <dl>
+          <dt>Sentire la nota di partenza</dt>
+          <dd>In alto, accanto al titolo, c'è la tonalità con una nota musicale (per esempio
+            ♪ SOL). Toccala e la senti suonare: è l'accordo su cui partire.</dd>
+
+          <dt>Sentire il tempo</dt>
+          <dd>Accanto c'è il battito al minuto. Toccalo e parte il metronomo, con il colpo del
+            primo movimento più marcato. Si ferma toccando <b>Ferma</b>.</dd>
+
+          <dt>Se il tempo non c'è ancora</dt>
+          <dd>Al posto del numero c'è scritto «bpm». Toccalo, poi batti il pulsante grande a tempo
+            col canto quattro o cinque volte: il valore si salva da solo, per tutti.</dd>
+
+          <dt>Cambiare tonalità</dt>
+          <dd>I tasti <span class="key">−</span> <span class="key">0</span> <span class="key">+</span>
+            in alto alzano o abbassano di un semitono, e tutti gli accordi si riscrivono da soli.
+            Toccando lo <b>0</b> si torna all'originale.</dd>
+
+          <dt>La parte per l'organo</dt>
+          <dd>Il tasto 🎹 <b>Organo</b> apre una finestra a parte con la registrazione, lo spartito
+            e le note per l'organista. Chi suona la chitarra può ignorarlo.</dd>
+        </dl>
+      </div>
+
+      <div>
+        <h3>Preparare la scaletta della messa</h3>
+        <dl>
+          <dt>Crearne una nuova</dt>
+          <dd>In basso tocca <b>Scalette</b>, poi <b>+ Nuova</b>. Scegli la data (la domenica
+            successiva è già proposta) e, se vuoi, un nome come «Messa delle 11».</dd>
+
+          <dt>Riempire i momenti</dt>
+          <dd>La scaletta si apre già divisa come la messa: Ingresso, Gloria, Al Vangelo,
+            Offertorio, Santo, Comunione, Finale. Tocca <b>Scegli il canto</b> sotto un momento e
+            ti vengono proposti solo i canti adatti a quel momento.</dd>
+
+          <dt>Vedere cosa manca</dt>
+          <dd>La barretta in cima si colora un pezzo alla volta: quando è tutta dorata, ogni
+            momento ha il suo canto.</dd>
+
+          <dt>Mettere due canti nello stesso momento</dt>
+          <dd>Si può: il secondo compare sotto il primo con la scritta <b>extra</b>, e con le
+            frecce ▲▼ decidi quale si canta per primo.</dd>
+
+          <dt>Aggiungere un canto fuori schema</dt>
+          <dd>In fondo c'è <b>Canti extra</b>: serve per l'Ave Maria finale, un canto alla Madonna,
+            o qualsiasi cosa non rientri nei momenti fissi.</dd>
+
+          <dt>Togliere un canto</dt>
+          <dd>Il tasto <b>×</b> alla sua destra. Non cancella il canto: lo toglie solo da questa
+            scaletta.</dd>
+        </dl>
+      </div>
+
+      <div>
+        <h3>Durante la messa</h3>
+        <dl>
+          <dt>Aprire la scaletta del giorno</dt>
+          <dd>In basso <b>Scalette</b>: quella in programma è la prima, evidenziata. Toccala.</dd>
+
+          <dt>Passare al canto dopo</dt>
+          <dd>Apri il primo canto e poi usa <b>Successivo →</b> in fondo alla pagina. Non serve
+            tornare indietro e ricercare ogni volta.</dd>
+
+          <dt>Lo schermo resta acceso</dt>
+          <dd>Finché un canto è aperto, il telefono non si spegne da solo.</dd>
+
+          <dt>Senza rete</dt>
+          <dd>Funziona tutto lo stesso: i canti sono dentro il telefono.</dd>
+        </dl>
+      </div>
+
+      <div>
+        <h3>Stampare e correggere</h3>
+        <dl>
+          <dt>Stampare il libretto</dt>
+          <dd>In basso <b>Stampa</b>. Scegli se stampare tutti i canti, una singola scaletta o solo
+            quelli che selezioni. Viene fuori con copertina e indice numerato.</dd>
+
+          <dt>Farne un PDF invece che stamparlo</dt>
+          <dd>Nella finestra di stampa, alla voce <em>Destinazione</em>, scegli
+            <b>Salva come PDF</b>.</dd>
+
+          <dt>Correggere un accordo o una parola</dt>
+          <dd>Dentro il canto, il tasto <b>⋮</b> in alto a destra, poi <b>Modifica canto</b>.
+            Gli accordi si scrivono nella riga sopra il testo, come sui fogli di sempre.</dd>
+
+          <dt>Se sbagli</dt>
+          <dd>Sempre dal tasto <b>⋮</b> c'è <b>Ripristina la versione originale</b>: il canto torna
+            come era all'inizio. Non si rompe niente.</dd>
+
+          <dt>Attenzione</dt>
+          <dd>Le correzioni valgono per tutti: se cambi un accordo, lo vedranno tutti i coristi.</dd>
+        </dl>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------- problemi -->
+  <section id="problemi">
+    <h2>Se qualcosa non va</h2>
+    <div class="faq">
+      <div>
+        <h3>Non trovo «Aggiungi a Home»</h3>
+        <p>Quasi sempre è perché non stai usando il browser giusto: <strong>Safari</strong> su iPhone,
+          <strong>Chrome</strong> su Android. Chiudi e riprova da quello.</p>
+      </div>
+      <div>
+        <h3>L'ho installata ma non trovo l'icona</h3>
+        <p>Scorri la schermata del telefono verso sinistra: le app nuove finiscono spesso nell'ultima
+          pagina. Oppure trascina il dito verso il basso al centro dello schermo e scrivi «Canti».</p>
+      </div>
+      <div>
+        <h3>Devo installarla anche sul computer?</h3>
+        <p>No. Al computer basta aprire l'indirizzo nel browser: funziona uguale, con gli stessi
+          canti e le stesse scalette.</p>
+      </div>
+      <div>
+        <h3>In chiesa non prende: funziona lo stesso?</h3>
+        <p>Sì. I canti sono salvati dentro il telefono. Serve internet solo la prima volta e quando
+          il maestro cambia la scaletta.</p>
+      </div>
+      <div>
+        <h3>Lo schermo si spegne mentre canto</h3>
+        <p>Con un canto aperto l'app tiene lo schermo acceso da sola. Se si spegne comunque, alza il
+          tempo di spegnimento nelle impostazioni del telefono.</p>
+      </div>
+      <div>
+        <h3>Non vedo la scaletta nuova</h3>
+        <p>Chiudi e riapri l'app con internet acceso. In alto a destra il pallino diventa verde
+          quando è tutto aggiornato.</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+// Pulsante "copia": serve soprattutto a chi apre questa pagina dentro WhatsApp o
+// la posta, dove il link si aprirebbe in una finestra senza il tasto di installazione.
+(function () {
+  var btn = document.getElementById('copy-url');
+  var link = document.getElementById('app-url');
+  if (!btn || !link) return;
+
+  var etichetta = btn.textContent;
+  var timer = null;
+
+  function esito(testo, ok) {
+    btn.textContent = testo;
+    btn.classList.toggle('done', !!ok);
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      btn.textContent = etichetta;
+      btn.classList.remove('done');
+    }, 2500);
+  }
+
+  btn.addEventListener('click', function () {
+    var url = link.getAttribute('href');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(
+        function () { esito('Copiato!', true); },
+        function () { selezionaTesto(); }
+      );
+    } else {
+      selezionaTesto();
+    }
+  });
+
+  // Se il browser non concede gli appunti, almeno selezioniamo l'indirizzo
+  // così resta solo da tenere premuto e scegliere "Copia".
+  function selezionaTesto() {
+    try {
+      var range = document.createRange();
+      range.selectNodeContents(link);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      esito('Selezionato: tieni premuto e copia', false);
+    } catch (e) {
+      esito('Copialo a mano qui sopra', false);
+    }
+  }
+})();
+</script>
+
+<p style="max-width:44rem;margin:0 auto;padding:0 1.25rem 3rem;font-family:'Atkinson Hyperlegible',system-ui,sans-serif">
+  <a href="./" style="color:#1F3D7A;font-weight:700">&#8592; Apri l'app dei canti</a>
+</p>
+</body>
+</html>

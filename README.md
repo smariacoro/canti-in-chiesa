@@ -49,7 +49,9 @@ git push -u origin main
 
 Poi su GitHub: **Settings → Pages → Source: GitHub Actions**. Il workflow in
 `.github/workflows/deploy.yml` pubblica la cartella `app/` a ogni push su `main`.
-L'indirizzo sarà `https://TUO-UTENTE.github.io/canti-in-chiesa/`.
+
+L'app è online su <https://smariacoro.github.io/canti-in-chiesa/>, e la guida per
+il coro su <https://smariacoro.github.io/canti-in-chiesa/guida.html>.
 
 Per installarla sul telefono: aprire quell'indirizzo e scegliere *Aggiungi a
 schermata Home* (su iPhone dal menu Condividi di Safari, su Android dal menu di
@@ -86,6 +88,7 @@ campo. In caso di conflitto vince la modifica più recente.
 ```
 app/                    la PWA, è questa che va pubblicata
   index.html            struttura della pagina
+  guida.html            guida per il coro, pubblica e senza account
   config.js             Supabase e nome della parrocchia
   sw.js                 service worker: fa funzionare tutto offline
   css/app.css           tema chiaro/scuro, stampa, zoom
