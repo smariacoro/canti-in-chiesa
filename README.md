@@ -19,9 +19,13 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 - **Trasposizione** di semitoni, con gli accordi che si riscrivono da soli.
 - **Scalette con data**, strutturate come la messa: ogni momento è una casella che
   aspetta il suo canto, e restano visibili anche vuote così si vede a colpo d'occhio
-  cosa manca. Chi vuole può aggiungere altri canti nello stesso momento (segnati
-  come *extra*) o fuori schema. Durante la messa si passa da un canto al successivo
-  senza tornare indietro, e lo schermo resta acceso.
+  cosa manca. Riempiendo una casella l'elenco propone prima i canti di quel momento e
+  poi tutti gli altri, perché capita di volere un canto della comunione all'offertorio.
+  Si possono mettere più canti nello stesso momento (i successivi sono segnati *extra*)
+  o fuori schema.
+- **Modalità messa**: dalla scaletta, *Avvia la messa* apre i canti a schermo pieno, uno
+  alla volta, senza barre né schede. Si va avanti col pulsante o scorrendo il dito, si
+  salta a un altro canto dall'elenco in cima, e lo schermo resta acceso.
 - **Arrangiamento per organo** per ogni canto, in una finestra separata dagli
   accordi per chitarra ma raggiungibile con un tocco: registrazione, note per
   l'organista e **spartito vero** scritto in notazione ABC.
@@ -100,7 +104,7 @@ app/                    la PWA, è questa che va pubblicata
     chords.js           accordi italiani: analisi, trasposizione, frequenze
     audio.js            metronomo, nota di riferimento, tap tempo
     score.js            spartiti in notazione ABC
-    views/              le schermate
+    views/              le schermate (elenco, canto, scalette, messa, stampa)
   vendor/               abcjs (MIT), copia locale per gli spartiti offline
   data/songs.json       il catalogo (generato, non modificare a mano)
   icons/                icone generate dallo stemma della Basilica

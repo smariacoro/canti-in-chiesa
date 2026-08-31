@@ -21,7 +21,7 @@ function onBeat(index, accent) {
   });
 }
 
-async function keepAwake(on) {
+export async function keepAwake(on) {
   try {
     if (on && 'wakeLock' in navigator && !wakeLock) {
       wakeLock = await navigator.wakeLock.request('screen');

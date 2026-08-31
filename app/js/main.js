@@ -7,6 +7,7 @@ import { startRouter, parseHash, navigate } from './router.js';
 import { songsView } from './views/songs.js';
 import { songView, leaveSong } from './views/song.js';
 import { setlistsView, setlistView } from './views/setlists.js';
+import { playView, leavePlay } from './views/play.js';
 import { printView } from './views/print.js';
 import { settingsView, applyTheme, newPasswordDialog } from './views/settings.js';
 import { PARISH_NAME } from '../config.js';
@@ -25,6 +26,7 @@ function route({ path, params }) {
   const key = path.join('/');
 
   if (lastPath.startsWith('canto/') && !key.startsWith('canto/')) leaveSong();
+  if (lastPath.startsWith('messa/') && !key.startsWith('messa/')) leavePlay();
   const changedScreen = key !== lastPath;
   lastPath = key;
 
@@ -38,6 +40,9 @@ function route({ path, params }) {
     case 'scaletta':
       setlistView(view, params, arg);
       break;
+    case 'messa':
+      playView(view, params, arg);
+      break;
     case 'stampa':
       printView(view, params);
       break;
@@ -50,7 +55,7 @@ function route({ path, params }) {
       break;
   }
 
-  const tab = { canto: 'canti', canti: 'canti', scalette: 'scalette', scaletta: 'scalette', stampa: 'stampa' }[head] || 'canti';
+  const tab = { canto: 'canti', canti: 'canti', scalette: 'scalette', scaletta: 'scalette', messa: 'scalette', stampa: 'stampa' }[head] || 'canti';
   for (const a of document.querySelectorAll('.tabbar a')) {
     a.toggleAttribute('aria-current', a.dataset.tab === tab);
     if (a.dataset.tab === tab) a.setAttribute('aria-current', 'page');

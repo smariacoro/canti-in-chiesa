@@ -2,7 +2,7 @@
 // Strategia: cache-first con aggiornamento in background (stale-while-revalidate),
 // così in chiesa l'apertura è istantanea anche con una linea pessima.
 
-const VERSION = 'v7';
+const VERSION = 'v9';
 const CACHE = `canti-in-chiesa-${VERSION}`;
 
 const PRECACHE = [
@@ -25,6 +25,7 @@ const PRECACHE = [
   'js/views/songs.js',
   'js/views/song.js',
   'js/views/setlists.js',
+  'js/views/play.js',
   'js/views/print.js',
   'js/views/settings.js',
   'data/songs.json',

@@ -108,7 +108,12 @@ export function setlistView(root, params, id) {
   ]));
 
   root.append(el('div', { class: 'btn-row', style: 'margin:.8rem 0' }, [
-    el('button', { class: 'btn primary', type: 'button', html: '+&nbsp; Aggiungi canti', onclick: () => navigate(`#/canti?aggiungi=${sl.id}`) }),
+    sl.items.length ? el('button', {
+      class: 'btn primary', type: 'button', html: '&#9654;&nbsp; Avvia la messa',
+      title: 'Apre la scaletta a schermo pieno, un canto alla volta',
+      onclick: () => navigate(`#/messa/${sl.id}?i=0`),
+    }) : null,
+    el('button', { class: 'btn', type: 'button', html: '+&nbsp; Aggiungi canti', onclick: () => navigate(`#/canti?aggiungi=${sl.id}`) }),
     el('button', { class: 'btn', type: 'button', html: '&#128424;&#xFE0F;&nbsp; Stampa', onclick: () => navigate(`#/stampa?scaletta=${sl.id}`) }),
   ]));
 

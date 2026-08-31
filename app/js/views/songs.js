@@ -96,13 +96,36 @@ export function songsView(root, params) {
   function paint() {
     clear(listWrap);
     const moment = slotMoment || ui.moment;
-    const results = store.search(ui.q, { moment, seasons: ui.seasons });
+    // Riempiendo una casella non si nascondono gli altri canti: capita di
+    // volerne uno "da comunione" all'offertorio. Vengono solo dopo.
+    const results = store.search(ui.q, { moment: slotMoment ? null : ui.moment, seasons: ui.seasons });
 
     if (!results.length) {
       listWrap.append(el('div', { class: 'empty' }, [
         el('strong', { text: 'Nessun canto trovato' }),
         el('span', { text: ui.q ? 'Prova con un’altra parola, oppure togli i filtri attivi.' : 'Togli qualche filtro per vedere più canti.' }),
       ]));
+      return;
+    }
+
+    // Casella della scaletta: prima i canti adatti a quel momento, poi gli altri.
+    if (slotMoment) {
+      const adatti = results.filter((s) => s.moments.includes(slotMoment));
+      const altri = results.filter((s) => !s.moments.includes(slotMoment));
+      if (adatti.length) {
+        listWrap.append(el('div', { class: 'section-title' }, [
+          el('span', { text: `Per ${momentLabel(slotMoment).toLowerCase()}` }),
+          el('span', { class: 'count', text: `${adatti.length}` }),
+        ]));
+        listWrap.append(list(adatti));
+      }
+      if (altri.length) {
+        listWrap.append(el('div', { class: 'section-title' }, [
+          el('span', { text: 'Tutti gli altri canti' }),
+          el('span', { class: 'count', text: `${altri.length}` }),
+        ]));
+        listWrap.append(list(altri));
+      }
       return;
     }
 
