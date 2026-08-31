@@ -358,6 +358,7 @@ export function normalizeSong(s) {
     notes: '',
     bpm: null,
     key: null,
+    video: null,
     ...s,
     moments: [...(s.moments || [])].sort((a, b) => momentRank(a) - momentRank(b)),
   };

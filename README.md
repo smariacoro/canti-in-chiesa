@@ -26,6 +26,11 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 - **Modalità messa**: dalla scaletta, *Avvia la messa* apre i canti a schermo pieno, uno
   alla volta, senza barre né schede. Si va avanti col pulsante o scorrendo il dito, si
   salta a un altro canto dall'elenco in cima, e lo schermo resta acceso.
+- **Ascolto del canto**: un pulsante discreto apre su YouTube la registrazione salvata
+  per quel canto; finché nessuno ne ha indicata una, apre una ricerca già impostata col
+  titolo, così funziona da subito su tutti e 82 senza incollare link a mano. È l'unica
+  funzione che richiede rete: senza collegamento il pulsante si sbiadisce e lo dice,
+  invece di aprire una pagina di errore.
 - **Arrangiamento per organo** per ogni canto, in una finestra separata dagli
   accordi per chitarra ma raggiungibile con un tocco: registrazione, note per
   l'organista e **spartito vero** scritto in notazione ABC.

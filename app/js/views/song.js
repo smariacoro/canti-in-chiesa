@@ -105,6 +105,22 @@ export function songView(root, params, id) {
   paintBpm();
   meta.append(bpmPill);
 
+  // ascolto su YouTube: il video salvato se c'è, altrimenti una ricerca già
+  // impostata. È l'unica funzione che ha bisogno della rete, quindi senza
+  // collegamento lo diciamo invece di far aprire una pagina di errore.
+  meta.append(el('a', {
+    class: `pill ${navigator.onLine ? '' : 'offline'}`.trim(),
+    href: videoUrl(song), target: '_blank', rel: 'noopener',
+    title: song.video ? 'Ascolta il canto su YouTube' : 'Cerca il canto su YouTube',
+    onclick: (e) => {
+      if (navigator.onLine) return;
+      e.preventDefault();
+      e.currentTarget.classList.add('offline');
+      toast('Per ascoltare il canto serve internet. Il testo e gli accordi restano disponibili.', 4000);
+    },
+    html: `<span class="k">&#9654;&#xFE0E;</span><span>${song.video ? 'Ascolta' : 'Cerca'}</span>`,
+  }));
+
   for (const m of song.moments) meta.append(el('span', { class: 'pill tag', text: momentLabel(m) }));
   for (const s of song.seasons) meta.append(el('span', { class: 'pill tag', text: seasonLabel(s) }));
   if (song.capo) meta.append(el('span', { class: 'pill tag', text: `capotasto ${song.capo}` }));
@@ -210,6 +226,25 @@ export function songView(root, params, id) {
   }
 }
 
+/**
+ * Indirizzo per ascoltare il canto. Se nessuno ha ancora salvato un video si
+ * apre una ricerca YouTube già impostata: funziona da subito su tutti gli 82
+ * canti, senza dover incollare link a mano uno per uno.
+ */
+export function videoUrl(song) {
+  if (song.video) return song.video;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(`${song.title} canto liturgico`)}`;
+}
+
+/** Accetta un link completo, un link breve o il solo codice del video. */
+function normalizeVideo(input) {
+  const v = String(input || '').trim();
+  if (!v) return null;
+  if (/^[\w-]{11}$/.test(v)) return `https://www.youtube.com/watch?v=${v}`;
+  if (/^https?:\/\//i.test(v)) return v;
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(v)}`;
+}
+
 export function leaveSong() {
   metro.stop();
   stopKey();
@@ -244,6 +279,12 @@ function menu(song, repaint, transpose = 0) {
       item('Modifica canto', '&#9998;', () => editSong(song, repaint)),
       item('Arrangiamento per organo', '&#127929;', () => organModal(song, repaint, transpose)),
       item('Aggiungi a una scaletta', '&#128197;', () => addToSetlistDialog(song)),
+      item(song.video ? 'Ascolta il canto' : 'Cerca il canto su YouTube', '&#9654;&#xFE0E;', () => {
+        if (!navigator.onLine) { toast('Per ascoltare il canto serve internet.', 4000); return; }
+        window.open(videoUrl(song), '_blank', 'noopener');
+      }),
+      item(song.video ? 'Cambia il link del video' : 'Salva il link di un video', '&#128279;',
+        () => videoDialog(song, repaint)),
       item('Batti il tempo (bpm)', '&#9201;', () => tapTempoDialog(song, repaint)),
       item('Stampa questo canto', '&#128424;&#xFE0F;', () => navigate(`#/stampa?canto=${encodeURIComponent(song.id)}`)),
     ];
@@ -265,6 +306,39 @@ function menu(song, repaint, transpose = 0) {
       }, 'danger'));
     }
     return el('div', { style: 'display:flex;flex-direction:column;gap:.4rem' }, rows);
+  });
+}
+
+/** Salva il link del video, così il coro trova sempre la stessa versione. */
+function videoDialog(song, repaint) {
+  modal('Video del canto', (close) => {
+    const input = el('input', {
+      class: 'input', type: 'url', inputmode: 'url', spellcheck: 'false',
+      value: song.video || '', placeholder: 'Incolla qui il link di YouTube',
+    });
+    return el('div', {}, [
+      el('p', {
+        style: 'color:var(--ink-soft);font-size:.9rem;margin-bottom:.8rem',
+        text: 'Cerca su YouTube la versione che cantate voi e incolla qui il suo indirizzo: da quel momento il pulsante «Ascolta» porterà tutto il coro a quella, invece che a una ricerca generica.',
+      }),
+      el('label', { class: 'field' }, [el('span', { text: 'Indirizzo del video' }), input]),
+      el('div', { class: 'modal-foot' }, [
+        song.video ? el('button', {
+          class: 'btn danger', type: 'button', text: 'Togli',
+          onclick: () => { store.patchSong(song.id, { video: null }); close(); toast('Link rimosso'); repaint(); },
+        }) : null,
+        el('button', { class: 'btn ghost', type: 'button', text: 'Annulla', onclick: () => close() }),
+        el('button', {
+          class: 'btn primary', type: 'button', text: 'Salva',
+          onclick: () => {
+            store.patchSong(song.id, { video: normalizeVideo(input.value) });
+            close();
+            toast('Link salvato');
+            repaint();
+          },
+        }),
+      ]),
+    ]);
   });
 }
 
@@ -484,6 +558,7 @@ export function editSong(song, repaint) {
     const meter = el('select', { class: 'input' }, [2, 3, 4, 6].map((n) => el('option', { value: String(n), text: `${n}/4`, selected: (song.meter || 4) === n })));
     const capo = el('input', { class: 'input', type: 'number', inputmode: 'numeric', min: '0', max: '11', value: song.capo || 0 });
     const notes = el('textarea', { class: 'input', style: 'min-height:4rem;font-family:inherit', value: song.notes || '', placeholder: 'Note per il coro' });
+    const video = el('input', { class: 'input', type: 'url', inputmode: 'url', spellcheck: 'false', value: song.video || '', placeholder: 'Link YouTube (facoltativo)' });
     const text = el('textarea', { class: 'input', style: 'min-height:16rem', value: songToText(song) });
 
     const momentBoxes = MOMENTS.map((m) => {
@@ -507,6 +582,7 @@ export function editSong(song, repaint) {
       ]),
       el('div', { class: 'field' }, [el('span', { text: 'Momenti della messa' }), el('div', { style: grid }, momentBoxes.map((b) => b.node))]),
       el('div', { class: 'field' }, [el('span', { text: 'Tempo liturgico' }), el('div', { style: grid }, seasonBoxes.map((b) => b.node))]),
+      el('label', { class: 'field' }, [el('span', { text: 'Video (YouTube)' }), video]),
       el('label', { class: 'field' }, [el('span', { text: 'Note' }), notes]),
       el('label', { class: 'field' }, [
         el('span', { text: 'Testo e accordi — gli accordi vanno sulla riga sopra, allineati alla sillaba. Usa [rit] per marcare il ritornello.' }),
@@ -527,6 +603,7 @@ export function editSong(song, repaint) {
               meter: Number(meter.value) || 4,
               capo: Number(capo.value) || 0,
               notes: notes.value.trim(),
+              video: normalizeVideo(video.value),
               moments: momentBoxes.filter((b) => b.cb.checked).map((b) => b.id),
               seasons: seasonBoxes.filter((b) => b.cb.checked).map((b) => b.id),
               sections: textToSong(text.value),
