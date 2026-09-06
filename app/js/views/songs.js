@@ -4,6 +4,7 @@
 import { el, clear, highlight, toast, modal } from '../ui.js';
 import { store, MOMENTS, SEASONS, momentLabel, seasonLabel, byTitle } from '../store.js';
 import { navigate } from '../router.js';
+import { newsBanner } from './setlists.js';
 
 const ui = { q: '', moment: null, seasons: [], showFilters: false };
 
@@ -16,6 +17,12 @@ export function songsView(root, params) {
 
   clear(root);
   root.classList.remove('wide');
+
+  // se qualcuno ha preparato una scaletta, lo si vede appena si apre l'app
+  if (!setlist) {
+    const news = newsBanner();
+    if (news) root.append(news);
+  }
 
   if (addTo && !setlist) {
     root.append(el('div', { class: 'empty' }, [el('strong', { text: 'Scaletta non trovata' })]));

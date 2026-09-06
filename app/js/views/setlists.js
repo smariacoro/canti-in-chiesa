@@ -41,9 +41,45 @@ export function setlistsView(root, params) {
   }
 }
 
+/**
+ * Avviso da mettere in cima alla schermata dei canti quando qualcun altro ha
+ * preparato o cambiato una scaletta. Restituisce null se non c'è nulla di nuovo.
+ */
+export function newsBanner() {
+  const nuove = store.unseenSetlists;
+  if (!nuove.length) return null;
+
+  const prima = nuove[0];
+  const isNuova = store.isNewSetlist(prima.id);
+  const titolo = nuove.length === 1
+    ? (isNuova ? 'Nuova scaletta' : 'Scaletta aggiornata')
+    : `${nuove.length} scalette nuove o aggiornate`;
+  const dettaglio = nuove.length === 1
+    ? `${prima.title || 'Messa'} · ${formatDate(prima.date)}`
+    : nuove.map((s) => s.title || 'Messa').join(', ');
+
+  return el('div', { class: 'news' }, [
+    el('span', { class: 'news-dot', 'aria-hidden': 'true' }),
+    el('div', { style: 'flex:1;min-width:0' }, [
+      el('div', { class: 'news-title', text: titolo }),
+      el('div', { class: 'news-sub', text: dettaglio }),
+    ]),
+    el('button', {
+      class: 'btn small primary', type: 'button', text: 'Apri',
+      onclick: () => navigate(nuove.length === 1 ? `#/scaletta/${prima.id}` : '#/scalette'),
+    }),
+    el('button', {
+      class: 'icon-btn', type: 'button', 'aria-label': 'Ho visto', html: '&times;',
+      style: 'min-width:2.2rem',
+      onclick: () => store.markAllSetlistsSeen(),
+    }),
+  ]);
+}
+
 function row(sl, isNext) {
   const { d, m } = dayMonth(sl.date);
   const rel = relativeDay(sl.date);
+  const nuova = store.unseenSetlists.some((x) => x.id === sl.id);
   return el('div', {
     class: `setlist-row ${isNext ? 'next' : ''}`.trim(), role: 'button', tabindex: '0',
     onclick: () => navigate(`#/scaletta/${sl.id}`),
@@ -54,7 +90,10 @@ function row(sl, isNext) {
       el('div', { class: 'm', text: m }),
     ]),
     el('div', { class: 'grow' }, [
-      el('div', { class: 't', text: sl.title || 'Messa' }),
+      el('div', { class: 't' }, [
+        sl.title || 'Messa',
+        nuova ? el('span', { class: 'news-dot inline', title: 'Non l’hai ancora vista' }) : null,
+      ]),
       el('div', { class: 's', text: `${sl.items.length} cant${sl.items.length === 1 ? 'o' : 'i'}${rel ? ` · ${rel}` : ''}` }),
     ]),
     el('span', { style: 'color:var(--ink-faint)', html: '&#8250;' }),
@@ -97,6 +136,7 @@ export function setlistView(root, params, id) {
   }
 
   const repaint = () => setlistView(root, params, id);
+  store.markSetlistSeen(id);
 
   root.append(el('div', { style: 'display:flex;align-items:flex-start;gap:.4rem;margin-bottom:.3rem' }, [
     el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Indietro', html: '&#8592;', onclick: () => navigate('#/scalette') }),

@@ -62,7 +62,12 @@ const DEFAULT_PREFS = {
 };
 
 function emptyState() {
-  return { songs: {}, setlists: {}, hidden: [], prefs: { ...DEFAULT_PREFS }, pulledAt: null };
+  // `seen` resta locale al dispositivo: cosa ho gia' guardato io non riguarda
+  // gli altri coristi, quindi non viene sincronizzato.
+  return {
+    songs: {}, setlists: {}, hidden: [], prefs: { ...DEFAULT_PREFS },
+    pulledAt: null, seen: {}, seenInit: false,
+  };
 }
 
 class Store extends EventTarget {
@@ -82,6 +87,15 @@ class Store extends EventTarget {
     const data = await res.json();
     this.base = data.songs.map(normalizeSong);
     this._merged = null;
+
+    // Al primo avvio nulla e' "nuovo": chi arriva adesso non deve trovarsi
+    // addosso l'elenco di tutto lo storico.
+    if (!this.state.seenInit) {
+      for (const s of this.setlists) this.state.seen[s.id] = s.updatedAt || '';
+      this.state.seenInit = true;
+      this._save();
+    }
+
     this._emit();
   }
 
@@ -228,6 +242,8 @@ class Store extends EventTarget {
       dirty: true,
     };
     this.state.setlists[rec.id] = rec;
+    // l'ha appena scritta chi sta usando l'app: non e' una novita' per lui
+    this.state.seen[rec.id] = rec.updatedAt;
     this._save();
     this._emit();
     return rec;
@@ -238,6 +254,33 @@ class Store extends EventTarget {
     if (!cur) return;
     // tombstone: serve a propagare la cancellazione agli altri dispositivi
     this.state.setlists[id] = { ...cur, deleted: true, items: [], updatedAt: nowIso(), dirty: true };
+    this._save();
+    this._emit();
+  }
+
+  // ------------------------------------------------- scalette ancora da vedere
+
+  /** Scalette arrivate o cambiate dall'ultima volta che sono state aperte. */
+  get unseenSetlists() {
+    return this.setlists.filter((s) => this.state.seen[s.id] !== (s.updatedAt || ''));
+  }
+
+  /** Vera se della scaletta non si era mai vista nessuna versione. */
+  isNewSetlist(id) {
+    return !(id in this.state.seen);
+  }
+
+  markSetlistSeen(id) {
+    const s = this.setlist(id);
+    if (!s || this.state.seen[id] === (s.updatedAt || '')) return false;
+    this.state.seen[id] = s.updatedAt || '';
+    this._save();
+    this._emit();
+    return true;
+  }
+
+  markAllSetlistsSeen() {
+    for (const s of this.setlists) this.state.seen[s.id] = s.updatedAt || '';
     this._save();
     this._emit();
   }

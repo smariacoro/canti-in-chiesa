@@ -160,6 +160,39 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tab-ico { font-size: 1.15rem; line-height: 1; }
 .tabbar.hidden { display: none; }
 
+/* quante scalette non hai ancora aperto */
+.tabbar a { position: relative; }
+.tab-badge {
+  position: absolute; top: .45rem; left: 50%; margin-left: .25rem;
+  min-width: 1.1rem; height: 1.1rem; padding: 0 .25rem;
+  display: grid; place-items: center;
+  background: #C0392B; color: #fff;
+  border-radius: 999px; font-size: .68rem; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- avviso di scaletta nuova ---------- */
+.news {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .75rem .85rem; margin-bottom: .8rem;
+  background: color-mix(in srgb, var(--gold) 12%, var(--bg-raised));
+  border: 1px solid color-mix(in srgb, var(--gold) 40%, var(--line));
+  border-radius: var(--radius);
+}
+.news-title { font-weight: 700; font-size: .95rem; }
+.news-sub {
+  font-size: .82rem; color: var(--ink-soft);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.news-dot {
+  flex: none; width: .6rem; height: .6rem; border-radius: 50%;
+  background: #C0392B;
+}
+.news-dot.inline {
+  display: inline-block; margin-left: .4rem; vertical-align: .05em;
+  width: .5rem; height: .5rem;
+}
+
 /* ---------- elementi comuni ---------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: .4rem;

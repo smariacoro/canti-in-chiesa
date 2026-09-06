@@ -68,6 +68,21 @@ function route({ path, params }) {
   }
 }
 
+/** Pallino sulla scheda Scalette quando ce n'è qualcuna che non hai ancora visto. */
+function paintSetlistBadge() {
+  const tab = document.querySelector('.tabbar a[data-tab="scalette"]');
+  if (!tab) return;
+  const n = store.unseenSetlists.length;
+  let badge = tab.querySelector('.tab-badge');
+  if (!n) { if (badge) badge.remove(); return; }
+  if (!badge) {
+    badge = el('span', { class: 'tab-badge', 'aria-hidden': 'true' });
+    tab.append(badge);
+  }
+  badge.textContent = n > 9 ? '9+' : String(n);
+  tab.setAttribute('aria-label', `Scalette, ${n} da vedere`);
+}
+
 function paintSyncDot() {
   const dot = $('#sync-dot');
   const state = !isConfigured() ? 'offline' : sync.state === 'signed-out' ? 'offline' : sync.state;
@@ -116,7 +131,9 @@ async function boot() {
   sync.init();
   sync.addEventListener('state', paintSyncDot);
   store.addEventListener('change', paintSyncDot);
+  store.addEventListener('change', paintSetlistBadge);
   paintSyncDot();
+  paintSetlistBadge();
 
   $('#btn-settings').addEventListener('click', () => navigate('#/impostazioni'));
   $('#btn-sync').addEventListener('click', async () => {

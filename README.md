@@ -23,6 +23,10 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
   poi tutti gli altri, perché capita di volere un canto della comunione all'offertorio.
   Si possono mettere più canti nello stesso momento (i successivi sono segnati *extra*)
   o fuori schema.
+- **Avviso di scaletta nuova**: quando ne arriva una preparata da un altro corista,
+  all'apertura dell'app compare un avviso in cima e un pallino sulla scheda *Scalette*.
+  Distingue «nuova» da «aggiornata», sparisce all'apertura della scaletta e non scatta
+  mai per le proprie modifiche. Lo stato di lettura resta locale, non viene sincronizzato.
 - **Modalità messa**: dalla scaletta, *Avvia la messa* apre i canti a schermo pieno, uno
   alla volta, senza barre né schede. Si va avanti col pulsante o scorrendo il dito, si
   salta a un altro canto dall'elenco in cima, e lo schermo resta acceso.
