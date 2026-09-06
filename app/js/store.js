@@ -309,27 +309,40 @@ class Store extends EventTarget {
     ];
   }
 
-  markClean(kind, id, updatedAt) {
+  /**
+   * Segna come inviato un record, ma **solo se è ancora quello spedito**.
+   *
+   * Durante l'attesa della rete l'utente può modificare di nuovo lo stesso
+   * record: azzerare il flag alla cieca lo farebbe passare per inviato senza
+   * esserlo, e la lettura successiva lo sovrascriverebbe con la versione vecchia
+   * del server (era così che si perdeva un canto appena aggiunto alla scaletta).
+   */
+  markClean(kind, id, pushedUpdatedAt = null) {
     const bag = kind === 'song' ? this.state.songs : this.state.setlists;
-    if (bag[id]) {
-      bag[id].dirty = false;
-      if (updatedAt) bag[id].updatedAt = updatedAt;
-      this._save();
-    }
+    const rec = bag[id];
+    if (!rec) return false;
+    if (pushedUpdatedAt && rec.updatedAt !== pushedUpdatedAt) return false;
+    rec.dirty = false;
+    this._save();
+    return true;
   }
 
   /** Applica record arrivati dal server, senza sovrascrivere modifiche locali più recenti. */
   applyRemote({ songs = [], setlists = [], hidden = null, pulledAt = null }) {
     let touched = false;
+    // Un record ancora da inviare non si tocca mai: le sue modifiche partiranno
+    // alla prossima sincronizzazione e diventeranno la versione buona per tutti.
+    // Confrontare le date non servirebbe, anzi: quella locale viene dall'orologio
+    // del telefono e quella remota da quello del server, e non sono confrontabili.
     for (const r of songs) {
       const cur = this.state.songs[r.id];
-      if (cur && cur.dirty && (cur.updatedAt || '') > (r.updatedAt || '')) continue;
+      if (cur && cur.dirty) continue;
       this.state.songs[r.id] = { ...normalizeSong(r), dirty: false };
       touched = true;
     }
     for (const r of setlists) {
       const cur = this.state.setlists[r.id];
-      if (cur && cur.dirty && (cur.updatedAt || '') > (r.updatedAt || '')) continue;
+      if (cur && cur.dirty) continue;
       this.state.setlists[r.id] = { ...r, dirty: false };
       touched = true;
     }

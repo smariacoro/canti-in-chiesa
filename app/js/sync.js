@@ -2,7 +2,8 @@
 //
 // Regole: l'app funziona sempre in locale; la rete è un extra. Le modifiche
 // fatte offline restano marcate "dirty" e partono da sole appena c'è campo.
-// In caso di conflitto vince la scrittura con updatedAt più recente.
+// Una modifica locale non ancora inviata non viene mai sovrascritta da una
+// lettura; fra dispositivi diversi vince l'ultima scrittura arrivata al server.
 
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
 import { store } from './store.js';
@@ -209,8 +210,12 @@ class Sync extends EventTarget {
     this._busy = true;
     this._set('syncing');
     try {
-      await this._push();
+      // Prima si legge, poi si scrive. Chi riapre l'app dopo giorni si allinea
+      // *prima* di toccare qualcosa: altrimenti, modificando una scaletta ferma
+      // a com'era, rimanderebbe al server la versione vecchia cancellando i
+      // canti aggiunti nel frattempo da un altro dispositivo.
       await this._pull();
+      await this._push();
       this._set(store.pending.length ? 'pending' : 'ok');
       return true;
     } catch (e) {
@@ -227,15 +232,17 @@ class Sync extends EventTarget {
     const songs = Object.values(store.state.songs).filter((s) => s.dirty);
     const setlists = Object.values(store.state.setlists).filter((s) => s.dirty);
 
+    // Si passa a markClean la data della versione spedita: se nel frattempo
+    // l'utente ha modificato di nuovo lo stesso record, quello resta da inviare.
     if (songs.length) {
       const rows = songs.map((s) => ({ id: s.id, data: stripLocal(s), updated_at: s.updatedAt }));
       await this._upsert('songs', rows);
-      songs.forEach((s) => store.markClean('song', s.id));
+      songs.forEach((s) => store.markClean('song', s.id, s.updatedAt));
     }
     if (setlists.length) {
       const rows = setlists.map((s) => ({ id: s.id, data: stripLocal(s), updated_at: s.updatedAt }));
       await this._upsert('setlists', rows);
-      setlists.forEach((s) => store.markClean('setlist', s.id));
+      setlists.forEach((s) => store.markClean('setlist', s.id, s.updatedAt));
     }
     await this._upsert('app_state', [{
       key: 'hidden', data: { ids: store.state.hidden }, updated_at: new Date().toISOString(),

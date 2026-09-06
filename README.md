@@ -94,7 +94,9 @@ si iscriva chiunque, in *Authentication → Providers → Email* spegni
 **Enable sign ups** e crea tu gli account del coro.
 
 Le modifiche fatte senza rete restano in coda e partono da sole quando torna il
-campo. In caso di conflitto vince la modifica più recente.
+campo. Una modifica ancora da inviare non viene mai sovrascritta da quello che
+arriva dal server: parte alla sincronizzazione successiva e diventa la versione
+buona per tutti. Fra dispositivi diversi vince l'ultima scrittura arrivata.
 
 ## Struttura
 
