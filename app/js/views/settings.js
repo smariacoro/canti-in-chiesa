@@ -208,11 +208,39 @@ function authDialog(mode, repaint) {
     const pass = el('input', { class: 'input', type: 'password', placeholder: 'Password', autocomplete: mode === 'signup' ? 'new-password' : 'current-password' });
     const msg = el('p', { style: 'font-size:.85rem;color:var(--warn);min-height:1.2rem' });
     const submit = el('button', { class: 'btn primary', type: 'submit', text: mode === 'signup' ? 'Crea account' : 'Accedi' });
+    const avviso = el('div');
+    // indirizzo che l'utente ha confermato così com'è, nonostante il suggerimento
+    let confermato = null;
 
     const form = el('form', {
       onsubmit: async (e) => {
         e.preventDefault();
         msg.textContent = '';
+        avviso.replaceChildren();
+
+        if (mode === 'signup') {
+          const check = controllaEmail(email.value);
+          if (!check.ok) { msg.style.color = 'var(--warn)'; msg.textContent = check.errore; email.focus(); return; }
+          email.value = check.email;
+          if (check.forse && confermato !== check.email) {
+            avviso.append(el('div', { class: 'news', style: 'margin:0 0 .6rem' }, [
+              el('div', { style: 'flex:1;min-width:0' }, [
+                el('div', { class: 'news-title', text: 'Forse intendevi' }),
+                el('div', { class: 'news-sub', style: 'white-space:normal', text: check.forse }),
+              ]),
+              el('button', {
+                class: 'btn small primary', type: 'button', text: 'Sì, correggi',
+                onclick: () => { email.value = check.forse; avviso.replaceChildren(); form.requestSubmit(); },
+              }),
+              el('button', {
+                class: 'btn small ghost', type: 'button', text: 'No, è giusto',
+                onclick: () => { confermato = check.email; avviso.replaceChildren(); form.requestSubmit(); },
+              }),
+            ]));
+            return;
+          }
+        }
+
         submit.disabled = true;
         try {
           if (mode === 'signup') {
@@ -240,6 +268,7 @@ function authDialog(mode, repaint) {
       mode === 'signup' ? el('label', { class: 'field' }, [el('span', { text: 'Nome' }), name]) : null,
       el('label', { class: 'field' }, [el('span', { text: 'Email' }), email]),
       el('label', { class: 'field' }, [el('span', { text: 'Password' }), pass]),
+      avviso,
       msg,
       el('div', { class: 'modal-foot' }, [
         mode === 'signin'
@@ -293,8 +322,65 @@ export function newPasswordDialog() {
   });
 }
 
+// ------------------------------------------------------------ controllo email
+//
+// Ogni conferma spedita a un indirizzo sbagliato rimbalza, e Supabase limita
+// l'invio ai progetti con troppi rimbalzi. Meglio fermare l'errore di battitura
+// qui, prima che parta qualcosa.
+
+const DOMINI_COMUNI = [
+  'gmail.com', 'libero.it', 'hotmail.it', 'hotmail.com', 'yahoo.it', 'yahoo.com',
+  'virgilio.it', 'outlook.it', 'outlook.com', 'live.it', 'live.com', 'icloud.com',
+  'me.com', 'alice.it', 'tiscali.it', 'tim.it', 'tin.it', 'fastwebnet.it',
+  'email.it', 'inwind.it', 'aruba.it',
+];
+
+function distanza(a, b) {
+  const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(
+        d[i - 1][j] + 1,
+        d[i][j - 1] + 1,
+        d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+    }
+  }
+  return d[a.length][b.length];
+}
+
+/**
+ * @returns {{ok: false, errore: string} | {ok: true, email: string, forse?: string}}
+ */
+export function controllaEmail(raw) {
+  const email = String(raw || '').trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/.test(email)) {
+    return { ok: false, errore: 'L’indirizzo non sembra completo: controlla la @ e la parte finale, per esempio mario.rossi@gmail.com.' };
+  }
+  const [nome, dominio] = email.split('@');
+  if (DOMINI_COMUNI.includes(dominio)) return { ok: true, email };
+
+  let vicino = null;
+  let minima = 3;
+  for (const noto of DOMINI_COMUNI) {
+    const k = distanza(dominio, noto);
+    if (k < minima) { minima = k; vicino = noto; }
+  }
+  return vicino ? { ok: true, email, forse: `${nome}@${vicino}` } : { ok: true, email };
+}
+
 function traduci(message = '') {
   const m = message.toLowerCase();
+  if (m.includes('signups not allowed') || m.includes('signup_disabled')) {
+    return 'Le iscrizioni libere sono chiuse: chiedi l’account a chi gestisce l’app del coro.';
+  }
+  if (m.includes('rate limit') || m.includes('only request this after')) {
+    return 'Sono state inviate troppe email in poco tempo. Riprova più tardi.';
+  }
+  if (m.includes('invalid format') || m.includes('email address') && m.includes('invalid')) {
+    return 'L’indirizzo email non è valido: controlla di averlo scritto bene.';
+  }
   if (m.includes('invalid login')) return 'Email o password non corretti.';
   if (m.includes('already registered')) return 'Questa email è già registrata: prova ad accedere.';
   if (m.includes('password')) return 'La password deve avere almeno 6 caratteri.';
