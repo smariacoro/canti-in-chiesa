@@ -5,6 +5,7 @@ import { el, clear, highlight, toast, modal } from '../ui.js';
 import { store, MOMENTS, SEASONS, momentLabel, seasonLabel, byTitle } from '../store.js';
 import { navigate } from '../router.js';
 import { newsBanner } from './setlists.js';
+import { suggerimentiPerCasella } from './suggest.js';
 
 const ui = { q: '', moment: null, seasons: [], showFilters: false };
 
@@ -117,6 +118,29 @@ export function songsView(root, params) {
 
     // Casella della scaletta: prima i canti adatti a quel momento, poi gli altri.
     if (slotMoment) {
+      // in cima, i canti che riprendono le letture del giorno della scaletta
+      if (!ui.q) {
+        const sugg = el('div');
+        listWrap.append(sugg);
+        suggerimentiPerCasella(setlist, slotMoment).then(({ lista, letture, nota }) => {
+          if (!sugg.isConnected) return;
+          if (nota) sugg.append(el('p', { class: 'lit-note', style: 'margin:.4rem .2rem', text: nota }));
+          if (!lista.length) return;
+          sugg.append(el('div', { class: 'section-title' }, [
+            el('span', { text: letture ? 'Suggeriti dalle letture' : 'Suggeriti per il tempo liturgico' }),
+            el('span', { class: 'count', text: `${lista.length}` }),
+          ]));
+          const ul = el('ul', { class: 'song-list' });
+          for (const x of lista) {
+            const li = row(x.song);
+            if (x.motivi.length) {
+              li.querySelector('.m').prepend(el('span', { class: 'lit-why', text: `${x.motivi.join(' · ')} ·` }));
+            }
+            ul.append(li);
+          }
+          sugg.append(ul);
+        });
+      }
       const adatti = results.filter((s) => s.moments.includes(slotMoment));
       const altri = results.filter((s) => !s.moments.includes(slotMoment));
       if (adatti.length) {

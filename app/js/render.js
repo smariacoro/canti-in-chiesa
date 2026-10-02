@@ -2,7 +2,7 @@
 // così la pagina stampata è identica a quella che il coro vede sul telefono.
 
 import { el } from './ui.js';
-import { transposeCell, prefersFlat } from './chords.js';
+import { transposeCell, prefersFlat, splitCell } from './chords.js';
 
 const SECTION_LABELS = {
   rit: 'Ritornello',
@@ -179,4 +179,77 @@ function buildSegments(lyric, chords) {
   }
   for (const c of trailing) segs.push({ c });
   return segs;
+}
+
+// ------------------------------------------------- spostamento degli accordi
+//
+// Il testo resta fisso; gli accordi si agganciano alle parole. Ogni accordo è
+// un elemento a sé (anche quando due stanno sulla stessa parola), così si può
+// prendere e spostare singolarmente. Le posizioni speciali sono:
+//   slot -1      prima del testo (anacrusi)
+//   slot 0..W-1  sulla parola corrispondente
+//   slot W       dopo l'ultima parola (accordi di raccordo a fine riga)
+
+/** Riga del canto -> {text, words, tokens, instr}. */
+export function lineToModel(line, lineId = 0) {
+  const segs = line.s || [];
+  const text = segs.map((g) => g.t || '').join('');
+  const words = [];
+  const re = /\S+/g;
+  let m;
+  while ((m = re.exec(text))) words.push({ start: m.index, end: m.index + m[0].length });
+  const W = words.length;
+
+  const tokens = [];
+  let pos = 0;
+  let n = 0;
+  for (const seg of segs) {
+    const t = seg.t || '';
+    if (seg.c) {
+      let slot;
+      if (!t.trim()) {
+        // solo accordo: prima del testo, oppure in coda alla riga
+        const prossima = words.findIndex((w) => w.start >= pos);
+        slot = prossima < 0 ? W : (prossima === 0 ? -1 : prossima);
+      } else {
+        const idx = words.findIndex((w) => w.end > pos);
+        slot = idx < 0 ? W : idx;
+      }
+      for (const c of splitCell(seg.c)) tokens.push({ id: `${lineId}:${n++}`, c, slot });
+    }
+    pos += t.length;
+  }
+  return { text, words, tokens, instr: Boolean(line.instr) };
+}
+
+/** Inverso di lineToModel: il testo esce identico, cambiano solo i punti di divisione. */
+export function modelToLine(model) {
+  const { text, words, tokens } = model;
+  const W = words.length;
+  const segs = tokens.filter((t) => t.slot < 0).map((t) => ({ c: t.c }));
+
+  const perParola = new Map();
+  for (const t of tokens) {
+    if (t.slot < 0 || t.slot >= W) continue;
+    if (!perParola.has(t.slot)) perParola.set(t.slot, []);
+    perParola.get(t.slot).push(t.c);
+  }
+  const slots = [...perParola.keys()].sort((a, b) => a - b);
+
+  if (!slots.length) {
+    if (text) segs.push({ t: text });
+  } else {
+    const inizio = words[slots[0]].start;
+    if (inizio > 0) segs.push({ t: text.slice(0, inizio) });
+    slots.forEach((slot, i) => {
+      const da = words[slot].start;
+      const a = i + 1 < slots.length ? words[slots[i + 1]].start : text.length;
+      segs.push({ c: perParola.get(slot).join(' '), t: text.slice(da, a) });
+    });
+  }
+  for (const t of tokens) if (t.slot >= W) segs.push({ c: t.c });
+
+  const out = { s: segs };
+  if (model.instr) out.instr = true;
+  return out;
 }

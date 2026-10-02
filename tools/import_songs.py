@@ -274,6 +274,7 @@ SEASONS = {
     "Santa Maria del cammino": ["mariano"],
     "Vergine Santa nostro orgoglio": ["mariano"],
     "Inno al Beato Stefano": ["santi"],
+    "Laudato sii, o mi Signore": ["santi"],  # Cantico delle creature, san Francesco
 }
 
 

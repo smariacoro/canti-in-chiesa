@@ -8,10 +8,19 @@ import { transposeCell, keyLabel, prefersFlat } from '../chords.js';
 import { Metronome, TapTempo, playKey, stopKey, unlockAudio } from '../audio.js';
 import { navigate, back } from '../router.js';
 import { renderScore, organTemplate, singleStaffTemplate, ABC_LEGEND } from '../score.js';
+import { normalizzaPennata, vuoto, compatto, conteggio, modelli, SEGNI, SIMBOLO, NOME } from '../rhythm.js';
+import { sync, isConfigured } from '../sync.js';
+import { chordMoveView } from './chordmove.js';
 
-const metro = new Metronome(onBeat);
+const metro = new Metronome(onBeat, onStep);
 let beatDots = null;
+let stepCells = null;
 let wakeLock = null;
+
+function onStep(i) {
+  if (!stepCells) return;
+  stepCells.forEach((c, k) => c.classList.toggle('now', k === i));
+}
 
 function onBeat(index, accent) {
   if (!beatDots) return;
@@ -56,6 +65,11 @@ export function songView(root, params, id) {
   const slId = params.get('sl');
   const setlist = slId ? store.setlist(slId) : null;
 
+  if (params.get('sposta')) {
+    chordMoveView(root, song, { transpose, setlistId: slId });
+    return;
+  }
+
   const repaint = () => songView(root, params, id);
 
   // ------------------------------------------------------------- intestazione
@@ -63,7 +77,7 @@ export function songView(root, params, id) {
     el('div', { style: 'display:flex;align-items:flex-start;gap:.4rem' }, [
       el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Indietro', html: '&#8592;', onclick: () => back('#/canti') }),
       el('h2', { text: song.title, style: 'flex:1;padding-top:.35rem' }),
-      el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Altre azioni', html: '&#8942;', onclick: () => menu(song, repaint, transpose) }),
+      el('button', { class: 'icon-btn', type: 'button', 'aria-label': 'Altre azioni', html: '&#8942;', onclick: () => menu(song, repaint, transpose, { apriRitmo: () => ritmo.apri(), slId }) }),
     ]),
   ]);
 
@@ -84,25 +98,22 @@ export function songView(root, params, id) {
     el('span', { text: shownKey || 'tonalità' }),
   ]));
 
-  // bpm: toccandolo parte il metronomo
+  // bpm: toccandolo parte il ritmo (clic, più la pennata se impostata);
+  // se la velocità manca si apre il pannello per impostarla
   const bpmPill = el('button', { class: 'pill', type: 'button' });
   const paintBpm = () => {
+    const r = ritmo ? ritmo.stato : { bpm: song.bpm };
     clear(bpmPill);
     bpmPill.classList.toggle('active', metro.running);
     bpmPill.append(
       el('span', { class: 'k', html: metro.running ? '&#9632;' : '&#9654;' }),
-      el('span', { text: song.bpm ? `${song.bpm} bpm` : 'bpm' }),
+      el('span', { text: r.bpm ? `${r.bpm} bpm` : 'bpm' }),
     );
   };
   bpmPill.addEventListener('click', () => {
-    unlockAudio();
-    if (!song.bpm) { tapTempoDialog(song, repaint); return; }
-    if (metro.running) { metro.stop(); beatDots = null; }
-    else { metro.start(song.bpm, song.meter || 4); }
-    paintBpm();
-    paintMetro();
+    if (!ritmo.stato.bpm) { ritmo.apri(); return; }
+    toggleRitmo();
   });
-  paintBpm();
   meta.append(bpmPill);
 
   // ascolto su YouTube: il video salvato se c'è, altrimenti una ricerca già
@@ -183,16 +194,34 @@ export function songView(root, params, id) {
   const paintMetro = () => {
     clear(metroBox);
     if (!metro.running) { beatDots = null; return; }
+    const r = ritmo.stato;
     beatDots = el('div', { class: 'beat-dots' });
-    for (let i = 0; i < (song.meter || 4); i++) beatDots.append(el('span', { class: 'beat-dot' }));
+    for (let i = 0; i < r.meter; i++) beatDots.append(el('span', { class: 'beat-dot' }));
     metroBox.append(
       beatDots,
-      el('span', { style: 'font-size:.8rem;color:var(--ink-soft)', text: `${song.bpm} bpm · ${song.meter || 4}/4` }),
-      el('button', { class: 'btn small ghost', type: 'button', text: 'Ferma', onclick: () => { metro.stop(); beatDots = null; paintBpm(); paintMetro(); } }),
+      el('span', { style: 'font-size:.8rem;color:var(--ink-soft)', text: `${r.bpm} bpm · ${r.meter}/4` }),
+      el('button', { class: 'btn small ghost', type: 'button', text: 'Ferma', onclick: () => toggleRitmo(false) }),
     );
   };
   toolbar.append(metroBox);
   root.append(toolbar);
+
+  // ---------------------------------------------------------------- ritmo
+  function toggleRitmo(accendi = !metro.running) {
+    unlockAudio();
+    const r = ritmo.stato;
+    if (!accendi || !r.bpm) metro.stop();
+    else metro.start(r.bpm, r.meter, vuoto(r.strum) ? null : r.strum);
+    paintBpm();
+    paintMetro();
+    ritmo.paintPlay();
+  }
+  const ritmo = rhythmPanel(song, {
+    onChange: () => { paintBpm(); if (metro.running) paintMetro(); },
+    onToggle: () => toggleRitmo(),
+  });
+  root.append(ritmo.el);
+  paintBpm();
 
   // --------------------------------------------------------------------- corpo
   const body = renderSongBody(song, { transpose, showChords });
@@ -249,6 +278,7 @@ export function leaveSong() {
   metro.stop();
   stopKey();
   beatDots = null;
+  stepCells = null;
   keepAwake(false);
 }
 
@@ -266,9 +296,240 @@ function stepper(title, value, onDelta, onReset, prefix = '') {
   ]);
 }
 
+// ------------------------------------------------------------ pannello ritmo
+//
+// Velocità, tempo e pennata della chitarra. Le modifiche finiscono sul canto,
+// che si sincronizza per intero: chi le imposta le passa a tutto il coro.
+
+const BPM_MIN = 30;
+const BPM_MAX = 240;
+
+function rhythmPanel(song, { onChange, onToggle }) {
+  const stato = {
+    bpm: song.bpm || null,
+    meter: song.meter || 4,
+    strum: song.strum ? normalizzaPennata(song.strum, song.meter || 4) : null,
+  };
+  const tap = new TapTempo();
+  let timer = null;
+
+  const salva = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const patch = {
+        bpm: stato.bpm,
+        meter: stato.meter,
+        strum: vuoto(stato.strum) ? null : stato.strum,
+      };
+      store.patchSong(song.id, patch);
+      // le altre azioni della pagina leggono `song`: va tenuto allineato
+      Object.assign(song, patch);
+    }, 500);
+  };
+
+  const card = el('section', { class: 'rhythm card' });
+  const summary = el('span', { class: 'rhythm-sum' });
+  const head = el('button', {
+    class: 'rhythm-head', type: 'button',
+    onclick: () => setAperto(body.hidden),
+  }, [
+    el('span', { class: 'rhythm-title', text: 'Ritmo' }),
+    summary,
+    el('span', { class: 'rhythm-chev', 'aria-hidden': 'true', html: '&#9662;' }),
+  ]);
+  const body = el('div', { class: 'rhythm-body' });
+  card.append(head, body);
+
+  function setAperto(aperto) {
+    body.hidden = !aperto;
+    head.setAttribute('aria-expanded', aperto ? 'true' : 'false');
+    card.classList.toggle('open', aperto);
+    store.setPref('rhythmOpen', aperto);
+  }
+
+  function paintSummary() {
+    const parti = [
+      stato.bpm ? `${stato.bpm} bpm` : 'velocità da impostare',
+      `${stato.meter}/4`,
+      compatto(stato.strum, stato.meter) || 'pennata da impostare',
+    ];
+    summary.textContent = parti.join(' · ');
+  }
+
+  // --- velocità: − / + con pressione prolungata, più il tap ---
+  const valore = el('span', { class: 'rhythm-bpm' });
+  const hint = el('span', { class: 'rhythm-hint' });
+  const paintBpmVal = () => {
+    valore.textContent = stato.bpm ? String(stato.bpm) : '–';
+  };
+
+  const setBpm = (v) => {
+    stato.bpm = Math.max(BPM_MIN, Math.min(BPM_MAX, Math.round(v)));
+    if (metro.running) metro.setBpm(stato.bpm);
+    paintBpmVal();
+    paintSummary();
+    paintPlay();
+    onChange();
+    salva();
+  };
+  const passo = (delta) => setBpm((stato.bpm || 80) + delta);
+
+  const tasto = (segno, delta) => {
+    let attesa = null;
+    let ripeti = null;
+    const ferma = () => { clearTimeout(attesa); clearInterval(ripeti); };
+    return el('button', {
+      class: 'btn rhythm-step', type: 'button', text: segno,
+      'aria-label': delta > 0 ? 'Aumenta la velocità' : 'Diminuisci la velocità',
+      onpointerdown: (e) => {
+        e.preventDefault();
+        passo(delta);
+        // tenendo premuto accelera, così da 70 a 100 non servono trenta tocchi
+        attesa = setTimeout(() => { ripeti = setInterval(() => passo(delta), 70); }, 420);
+      },
+      onpointerup: ferma,
+      onpointerleave: ferma,
+      onpointercancel: ferma,
+      onclick: (e) => { if (e.detail === 0) passo(delta); },   // tastiera
+    });
+  };
+
+  const batti = el('button', {
+    class: 'btn rhythm-tap', type: 'button', text: 'Batti il tempo',
+    onclick: () => {
+      unlockAudio();
+      const v = tap.tap();
+      if (v) { setBpm(v); hint.textContent = 'continua a battere per affinare'; }
+      else hint.textContent = tap.count < 3 ? `ancora ${3 - tap.count}…` : '';
+    },
+  });
+
+  // --- tempo ---
+  const tempi = el('div', { class: 'chips' });
+  const paintTempi = () => {
+    clear(tempi);
+    for (const m of [2, 3, 4, 6]) {
+      tempi.append(el('button', {
+        class: 'chip', type: 'button', text: `${m}/4`,
+        'aria-pressed': stato.meter === m ? 'true' : 'false',
+        onclick: () => {
+          if (stato.meter === m) return;
+          stato.meter = m;
+          if (stato.strum) stato.strum = normalizzaPennata(stato.strum, m);
+          paintTempi(); paintGriglia(); paintModelli(); paintSummary(); onChange(); salva();
+          if (metro.running) onToggle(), onToggle();
+        },
+      }));
+    }
+  };
+
+  // --- pennata ---
+  const griglia = el('div', { class: 'strum' });
+  const paintGriglia = () => {
+    clear(griglia);
+    const p = normalizzaPennata(stato.strum, stato.meter);
+    const etichette = conteggio(stato.meter);
+    stepCells = [];
+    [...p].forEach((segno, i) => {
+      const cella = el('button', {
+        class: `strum-cell ${i % 2 === 0 ? 'beat' : ''} s-${segno === '-' ? 'rest' : segno}`, type: 'button',
+        'aria-label': `${etichette[i]}: ${NOME[segno]}. Tocca per cambiare`,
+        onclick: () => {
+          const ora = normalizzaPennata(stato.strum, stato.meter);
+          const prossimo = SEGNI[(SEGNI.indexOf(ora[i]) + 1) % SEGNI.length];
+          stato.strum = ora.slice(0, i) + prossimo + ora.slice(i + 1);
+          if (metro.running) metro.setPattern(vuoto(stato.strum) ? null : stato.strum);
+          paintGriglia(); paintModelli(); paintSummary(); salva();
+        },
+      }, [
+        el('span', { class: 'strum-sym', text: SIMBOLO[segno] }),
+        el('span', { class: 'strum-count', text: etichette[i] }),
+      ]);
+      stepCells.push(cella);
+      griglia.append(cella);
+    });
+  };
+
+  const modelliBox = el('div', { class: 'chips' });
+  const paintModelli = () => {
+    clear(modelliBox);
+    for (const m of modelli(stato.meter)) {
+      modelliBox.append(el('button', {
+        class: 'chip', type: 'button', text: m.nome,
+        'aria-pressed': stato.strum === m.p ? 'true' : 'false',
+        onclick: () => {
+          stato.strum = m.p;
+          if (metro.running) metro.setPattern(stato.strum);
+          paintGriglia(); paintModelli(); paintSummary(); salva();
+        },
+      }));
+    }
+    if (!vuoto(stato.strum)) {
+      modelliBox.append(el('button', {
+        class: 'chip', type: 'button', text: 'Svuota',
+        onclick: () => {
+          stato.strum = null;
+          if (metro.running) metro.setPattern(null);
+          paintGriglia(); paintModelli(); paintSummary(); salva();
+        },
+      }));
+    }
+  };
+
+  // --- prova ---
+  const prova = el('button', { class: 'btn primary rhythm-play', type: 'button', onclick: () => onToggle() });
+  function paintPlay() {
+    prova.disabled = !stato.bpm;
+    prova.innerHTML = metro.running ? '&#9632;&nbsp; Ferma' : '&#9654;&#xFE0E;&nbsp; Prova il ritmo';
+    prova.title = stato.bpm ? '' : 'Prima imposta la velocità';
+  }
+
+  const nota = el('p', {
+    class: 'rhythm-note',
+    text: isConfigured() && sync.signedIn
+      ? 'Le modifiche si salvano da sole e arrivano a tutto il coro.'
+      : 'Le modifiche si salvano da sole su questo dispositivo. Con l’accesso arrivano anche agli altri.',
+  });
+
+  body.append(
+    el('div', { class: 'rhythm-row' }, [
+      el('span', { class: 'rhythm-label', text: 'Velocità' }),
+      el('div', { class: 'rhythm-speed' }, [
+        tasto('−', -1),
+        el('div', { class: 'rhythm-bpmbox' }, [valore, el('span', { class: 'rhythm-unit', text: 'bpm' })]),
+        tasto('+', 1),
+        batti,
+      ]),
+      hint,
+    ]),
+    el('div', { class: 'rhythm-row' }, [
+      el('span', { class: 'rhythm-label', text: 'Tempo' }),
+      tempi,
+    ]),
+    el('div', { class: 'rhythm-row' }, [
+      el('span', { class: 'rhythm-label', text: 'Pennata della chitarra' }),
+      griglia,
+      el('p', { class: 'rhythm-legend', text: '↓ giù, ↑ su, × stoppata, · pausa. Tocca una casella per cambiarla.' }),
+      modelliBox,
+    ]),
+    el('div', { class: 'rhythm-row rhythm-actions' }, [prova]),
+    nota,
+  );
+
+  paintBpmVal(); paintTempi(); paintGriglia(); paintModelli(); paintSummary(); paintPlay();
+  setAperto(Boolean(store.prefs.rhythmOpen));
+
+  return {
+    el: card,
+    stato,
+    paintPlay,
+    apri: () => { setAperto(true); card.scrollIntoView({ behavior: 'smooth', block: 'start' }); },
+  };
+}
+
 // --------------------------------------------------------------------- azioni
 
-function menu(song, repaint, transpose = 0) {
+function menu(song, repaint, transpose = 0, { apriRitmo = null, slId = null } = {}) {
   modal(song.title, (close) => {
     const item = (label, icon, fn, cls = '') => el('button', {
       class: `btn ${cls}`, type: 'button', style: 'width:100%;justify-content:flex-start',
@@ -285,7 +546,12 @@ function menu(song, repaint, transpose = 0) {
       }),
       item(song.video ? 'Cambia il link del video' : 'Salva il link di un video', '&#128279;',
         () => videoDialog(song, repaint)),
-      item('Batti il tempo (bpm)', '&#9201;', () => tapTempoDialog(song, repaint)),
+      item('Sposta gli accordi', '&#8596;', () => {
+        const q = new URLSearchParams({ sposta: '1' });
+        if (slId) q.set('sl', slId);
+        navigate(`#/canto/${encodeURIComponent(song.id)}?${q}`);
+      }),
+      apriRitmo ? item('Ritmo e velocità', '&#9833;', apriRitmo) : null,
       item('Stampa questo canto', '&#128424;&#xFE0F;', () => navigate(`#/stampa?canto=${encodeURIComponent(song.id)}`)),
     ];
     if (store.isModified(song.id)) {
@@ -305,7 +571,7 @@ function menu(song, repaint, transpose = 0) {
         }
       }, 'danger'));
     }
-    return el('div', { style: 'display:flex;flex-direction:column;gap:.4rem' }, rows);
+    return el('div', { style: 'display:flex;flex-direction:column;gap:.4rem' }, rows.filter(Boolean));
   });
 }
 
@@ -334,46 +600,6 @@ function videoDialog(song, repaint) {
             store.patchSong(song.id, { video: normalizeVideo(input.value) });
             close();
             toast('Link salvato');
-            repaint();
-          },
-        }),
-      ]),
-    ]);
-  });
-}
-
-function tapTempoDialog(song, repaint) {
-  const tap = new TapTempo();
-  let bpm = song.bpm || null;
-  modal('Batti il tempo', (close) => {
-    const readout = el('div', {
-      style: 'text-align:center;font-size:2.6rem;font-weight:700;line-height:1.1;margin:.5rem 0',
-      text: bpm ? String(bpm) : '– –',
-    });
-    const hint = el('p', {
-      style: 'text-align:center;color:var(--ink-faint);font-size:.85rem;margin-bottom:1rem',
-      text: 'Tocca il pulsante a tempo con il canto, almeno tre volte.',
-    });
-    const padBtn = el('button', {
-      class: 'btn primary', type: 'button',
-      style: 'width:100%;min-height:7rem;font-size:1.1rem',
-      text: 'BATTI',
-      onclick: () => {
-        unlockAudio();
-        const v = tap.tap();
-        if (v) { bpm = v; readout.textContent = String(v); }
-        else readout.textContent = '·'.repeat(Math.max(1, tap.count));
-      },
-    });
-    return el('div', {}, [
-      readout, hint, padBtn,
-      el('div', { class: 'modal-foot' }, [
-        el('button', { class: 'btn ghost', type: 'button', text: 'Annulla', onclick: () => close() }),
-        el('button', {
-          class: 'btn primary', type: 'button', text: 'Salva',
-          onclick: () => {
-            if (bpm) { store.patchSong(song.id, { bpm }); toast(`${bpm} bpm salvati`); }
-            close();
             repaint();
           },
         }),

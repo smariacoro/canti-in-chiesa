@@ -3,6 +3,7 @@
 import { el, clear, toast, modal, confirmDialog, formatDate, dayMonth, relativeDay, nextSunday } from '../ui.js';
 import { store, MOMENTS, momentLabel } from '../store.js';
 import { navigate } from '../router.js';
+import { suggestionsCard } from './suggest.js';
 
 export function setlistsView(root, params) {
   clear(root);
@@ -181,6 +182,20 @@ export function setlistView(root, params, id) {
         : `${coperti} moment${coperti === 1 ? 'o' : 'i'} su ${MOMENTS.length}`,
     }),
   ]));
+
+  // letture del giorno e canti suggeriti, aggiungibili con un tocco
+  root.append(suggestionsCard(sl, {
+    onAdd: (song, moment) => {
+      const fresh = store.setlist(sl.id);
+      if (!fresh) return;
+      const rango = (m) => { const i = MOMENTS.findIndex((x) => x.id === m); return i < 0 ? 99 : i; };
+      const items = [...fresh.items, { songId: song.id, moment, note: '' }];
+      items.sort((a, b) => rango(a.moment) - rango(b.moment));
+      store.saveSetlist({ ...fresh, items });
+      toast(`${song.title} → ${momentLabel(moment)}`);
+      repaint();
+    },
+  }));
 
   const wrap = el('div', { class: 'card', style: 'overflow:hidden;margin-top:.6rem' });
   let numero = 0;

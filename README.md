@@ -8,14 +8,22 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 
 ## Cosa fa
 
-- **82 canti** importati dal Drive del coro, con testo e accordi in notazione italiana.
+- **83 canti**: gli 82 del Drive del coro più «Laudato sii, o mi Signore», con testo e
+  accordi in notazione italiana.
 - **Ordinamento per momento della messa** (Ingresso, Gloria, Al Vangelo, Offertorio,
   Santo, Comunione, Finale) e, dentro ogni momento, in ordine alfabetico di titolo.
   Un canto può stare in più momenti.
 - **Ricerca** per titolo e per parole del testo, con filtri per tempo liturgico.
 - **Zoom indipendenti** per i comandi e per il testo dei canti.
 - **Tonalità e ritmo**: toccando la tonalità si sente l'accordo per intonare;
-  toccando il bpm parte il metronomo. Il bpm si imposta battendo il tempo.
+  toccando il bpm parte il metronomo. Il riquadro *Ritmo* di ogni canto raccoglie
+  velocità (con − e +, oppure battendo il tempo), tempo (2/4, 3/4, 4/4, 6/4) e la
+  **pennata della chitarra**: una casella per croma, ciascuna giù, su, stoppata o
+  pausa, con alcuni modelli pronti. *Prova il ritmo* la fa sentire evidenziando la
+  casella corrente.
+- **Spostamento degli accordi**: una modalità in cui il testo resta fisso e gli accordi
+  si trascinano sulla parola giusta (oppure si toccano e si sposta con le frecce), per
+  correggere quelli allineati male nei documenti originali.
 - **Trasposizione** di semitoni, con gli accordi che si riscrivono da soli.
 - **Scalette con data**, strutturate come la messa: ogni momento è una casella che
   aspetta il suo canto, e restano visibili anche vuote così si vede a colpo d'occhio
@@ -23,6 +31,11 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
   poi tutti gli altri, perché capita di volere un canto della comunione all'offertorio.
   Si possono mettere più canti nello stesso momento (i successivi sono segnati *extra*)
   o fuori schema.
+- **Canti suggeriti dalle letture**: nella scaletta, per la data della messa, l'app
+  scarica le letture del giorno e propone per ogni momento i canti che ne riprendono le
+  parole, indicando quali. Il tempo liturgico si calcola dalla data e ha la precedenza:
+  niente canti natalizi fuori stagione, «Lode a te, o Cristo» al posto dell'Alleluia in
+  Quaresima, avviso quando il Gloria non si canta.
 - **Avviso di scaletta nuova**: quando ne arriva una preparata da un altro corista,
   all'apertura dell'app compare un avviso in cima e un pallino sulla scheda *Scalette*.
   Distingue «nuova» da «aggiornata», sparisce all'apertura della scaletta e non scatta
@@ -32,7 +45,7 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
   salta a un altro canto dall'elenco in cima, e lo schermo resta acceso.
 - **Ascolto del canto**: un pulsante discreto apre su YouTube la registrazione salvata
   per quel canto; finché nessuno ne ha indicata una, apre una ricerca già impostata col
-  titolo, così funziona da subito su tutti e 82 senza incollare link a mano. È l'unica
+  titolo, così funziona da subito su tutti i canti senza incollare link a mano. È l'unica
   funzione che richiede rete: senza collegamento il pulsante si sbiadisce e lo dice,
   invece di aprire una pagina di errore.
 - **Arrangiamento per organo** per ogni canto, in una finestra separata dagli
@@ -113,9 +126,12 @@ app/                    la PWA, è questa che va pubblicata
     sync.js             sincronizzazione con Supabase
     render.js           testo con accordi ⇄ testo modificabile
     chords.js           accordi italiani: analisi, trasposizione, frequenze
-    audio.js            metronomo, nota di riferimento, tap tempo
+    audio.js            metronomo a crome, pennata, nota di riferimento, tap tempo
+    rhythm.js           modelli di pennata della chitarra
+    liturgy.js          tempo liturgico, letture del giorno, canti suggeriti
     score.js            spartiti in notazione ABC
-    views/              le schermate (elenco, canto, scalette, messa, stampa)
+    views/              le schermate (elenco, canto, sposta accordi, scalette,
+                        suggerimenti, messa, stampa)
   vendor/               abcjs (MIT), copia locale per gli spartiti offline
   data/songs.json       il catalogo (generato, non modificare a mano)
   icons/                icone generate dallo stemma della Basilica
@@ -208,3 +224,17 @@ cache vengono buttate subito.
   secondi con *Batti il tempo* dal menu del canto.
 - **Tempi liturgici**: assegnati solo dove il titolo non lascia dubbi (Natale,
   Avvento, Pasqua, mariani…). Tutti gli altri sono da completare dall'app.
+
+## Letture del giorno
+
+Le letture arrivano dal feed pubblico di [Evangelizo](https://feed.evangelizo.org/),
+con i testi CEI. L'app lo interroga direttamente dal telefono, senza server intermedi:
+il feed lo consente esplicitamente. Ha un limite: risponde solo per le date
+**entro 30 giorni da oggi**, avanti e indietro. Per una scaletta più lontana l'app lo
+dice, e nel frattempo propone i canti adatti al tempo liturgico. Le letture scaricate
+restano sul dispositivo e si rivedono anche senza rete.
+
+I suggerimenti confrontano le parole delle letture con titolo e testo dei canti,
+dando più peso alle parole rare: «vigna» orienta la scelta, «Signore» no. Il
+risultato è un aiuto alla scelta, non una scelta: le parole in comune sono mostrate
+apposta, perché si possa giudicare.

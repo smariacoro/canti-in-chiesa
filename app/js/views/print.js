@@ -5,6 +5,7 @@ import { el, clear, toast, formatDate } from '../ui.js';
 import { store, MOMENTS, momentLabel, byTitle } from '../store.js';
 import { renderSongBody } from '../render.js';
 import { renderScore } from '../score.js';
+import { compatto } from '../rhythm.js';
 import { PARISH_NAME } from '../../config.js';
 
 const opts = {
@@ -236,6 +237,7 @@ async function doPrint(songs) {
           s.moments.map(momentLabel).join(', '),
           s.key ? `tonalità ${s.key}` : null,
           s.bpm ? `${s.bpm} bpm` : null,
+          s.strum ? `pennata ${compatto(s.strum, s.meter || 4)}` : null,
           s.capo ? `capotasto ${s.capo}` : null,
         ].filter(Boolean).join(' · '),
       }),

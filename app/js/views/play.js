@@ -88,7 +88,7 @@ export function playView(root, params, id) {
       class: 'pill', type: 'button', title: 'Metronomo',
       onclick: (e) => {
         unlockAudio();
-        const on = metro.toggle(song.bpm, song.meter || 4);
+        const on = metro.toggle(song.bpm, song.meter || 4, song.strum || null);
         e.currentTarget.classList.toggle('active', on !== false && metro.running);
       },
       html: `<span class="k">&#9654;</span><span>${song.bpm}</span>`,
