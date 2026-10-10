@@ -223,6 +223,7 @@ export function songsView(root, params) {
     return li;
   }
 
+  root.aggiornaElenco = paint;
   paint();
 }
 

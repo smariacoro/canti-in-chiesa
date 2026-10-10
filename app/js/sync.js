@@ -244,9 +244,11 @@ class Sync extends EventTarget {
       await this._upsert('setlists', rows);
       setlists.forEach((s) => store.markClean('setlist', s.id, s.updatedAt));
     }
-    await this._upsert('app_state', [{
-      key: 'hidden', data: { ids: store.state.hidden }, updated_at: new Date().toISOString(),
-    }]);
+    if (store.state.hiddenDirty) {
+      const ids = [...store.state.hidden];
+      await this._upsert('app_state', [{ key: 'hidden', data: { ids }, updated_at: new Date().toISOString() }]);
+      store.markHiddenClean(ids);
+    }
   }
 
   _upsert(table, rows) {

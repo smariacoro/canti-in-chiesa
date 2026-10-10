@@ -8,7 +8,8 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 
 ## Cosa fa
 
-- **83 canti**: gli 82 del Drive del coro più «Laudato sii, o mi Signore», con testo e
+- **85 canti**: gli 82 del Drive del coro più «Laudato sii, o mi Signore», «Alleluja ed
+  oggi ancora» e «Nella notte o Dio», con testo e
   accordi in notazione italiana.
 - **Ordinamento per momento della messa** (Ingresso, Gloria, Al Vangelo, Offertorio,
   Santo, Comunione, Finale) e, dentro ogni momento, in ordine alfabetico di titolo.

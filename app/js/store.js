@@ -150,7 +150,7 @@ class Store extends EventTarget {
   saveSong(song) {
     const s = normalizeSong({ ...song, updatedAt: nowIso(), dirty: true });
     this.state.songs[s.id] = s;
-    this.state.hidden = this.state.hidden.filter((h) => h !== s.id);
+    this._setHidden(this.state.hidden.filter((h) => h !== s.id));
     this._save();
     this._emit();
     return s;
@@ -184,16 +184,31 @@ class Store extends EventTarget {
   deleteSong(id) {
     const isBase = this.base.some((s) => s.id === id);
     delete this.state.songs[id];
-    if (isBase && !this.state.hidden.includes(id)) this.state.hidden.push(id);
+    if (isBase && !this.state.hidden.includes(id)) this._setHidden([...this.state.hidden, id]);
     this._save();
     this._emit();
+  }
+
+  /**
+   * L'elenco dei canti di base nascosti viaggia come un record unico: finché
+   * non è stato inviato, la lettura dal server non deve sovrascriverlo,
+   * altrimenti un canto appena eliminato ricomparirebbe.
+   */
+  _setHidden(list) {
+    if (sameIds(list, this.state.hidden)) return;
+    this.state.hidden = list;
+    this.state.hiddenDirty = true;
+  }
+
+  markHiddenClean(sent) {
+    if (sameIds(sent, this.state.hidden)) { this.state.hiddenDirty = false; this._save(); }
   }
 
   /** Ripristina un canto di base alla versione originale del catalogo. */
   resetSong(id) {
     if (!this.base.some((s) => s.id === id)) return false;
     delete this.state.songs[id];
-    this.state.hidden = this.state.hidden.filter((h) => h !== id);
+    this._setHidden(this.state.hidden.filter((h) => h !== id));
     this._save();
     this._emit();
     return true;
@@ -346,7 +361,13 @@ class Store extends EventTarget {
       this.state.setlists[r.id] = { ...r, dirty: false };
       touched = true;
     }
-    if (Array.isArray(hidden)) { this.state.hidden = hidden; touched = true; }
+    // Solo una novità vera fa ridisegnare: se ogni lettura segnalasse un cambio,
+    // la sincronia ripartirebbe da sola all'infinito, ricostruendo la schermata
+    // ogni due secondi (e chiudendo la tastiera a chi sta cercando un canto).
+    if (Array.isArray(hidden) && !this.state.hiddenDirty && !sameIds(hidden, this.state.hidden)) {
+      this.state.hidden = hidden;
+      touched = true;
+    }
     if (pulledAt) this.state.pulledAt = pulledAt;
     if (touched) { this._save(); this._emit(); }
     return touched;
@@ -369,11 +390,17 @@ class Store extends EventTarget {
     let n = 0;
     for (const s of data.songs || []) { this.state.songs[s.id] = { ...normalizeSong(s), dirty: true }; n++; }
     for (const s of data.setlists || []) { this.state.setlists[s.id] = { ...s, dirty: true }; n++; }
-    if (Array.isArray(data.hidden)) this.state.hidden = [...new Set([...this.state.hidden, ...data.hidden])];
+    if (Array.isArray(data.hidden)) this._setHidden([...new Set([...this.state.hidden, ...data.hidden])]);
     this._save();
     this._emit();
     return n;
   }
+}
+
+function sameIds(a, b) {
+  if (a.length !== b.length) return false;
+  const set = new Set(a);
+  return b.every((x) => set.has(x));
 }
 
 function score(song, terms) {

@@ -29,6 +29,7 @@ function route({ path, params }) {
   if (lastPath.startsWith('messa/') && !key.startsWith('messa/')) leavePlay();
   const changedScreen = key !== lastPath;
   lastPath = key;
+  view.aggiornaElenco = null; // lo reimposta l'elenco dei canti, se è quello
 
   switch (head) {
     case 'canto':
@@ -180,6 +181,12 @@ store.addEventListener('change', () => {
     const { path } = parseHash();
     // le viste con modali aperte non vanno ridisegnate sotto le mani dell'utente
     if (document.querySelector('.modal-backdrop')) return;
+    // chi sta scrivendo nella ricerca non deve perdere la tastiera: si
+    // aggiorna solo l'elenco, lasciando al suo posto il campo di testo
+    const typing = document.activeElement && view.contains(document.activeElement)
+      && /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName);
+    if (typing && typeof view.aggiornaElenco === 'function') { view.aggiornaElenco(); return; }
+    if (typing) return;
     if (path[0] === 'canti' || path[0] === 'scalette') route(parseHash());
   }, 250);
 });

@@ -17,7 +17,8 @@ export function parseChord(text) {
   if (!m) return null;
   let rest = text.trim().slice(m[0].length);
   let bass = null;
-  const slash = rest.indexOf('/');
+  // "/7" in "LA4/7" fa parte del suffisso; solo una nota dopo "/" è il basso.
+  const slash = rest.search(/\/(SOL|DO|RE|MI|FA|LA|SI)/);
   if (slash >= 0) {
     const b = ROOT_RE.exec(rest.slice(slash + 1));
     if (b) bass = b[0];

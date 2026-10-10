@@ -88,7 +88,7 @@ export function songToText(song, transpose = 0) {
  * righe di testo, blocchi separati da riga vuota, `[rit]` per l'etichetta.
  */
 export function textToSong(text) {
-  const CHORD_RE = /^(SOL|DO|RE|MI|FA|LA|SI)([#b]?)([^\s/]*)(\/(SOL|DO|RE|MI|FA|LA|SI)[#b]?)?$/;
+  const CHORD_RE = /^(SOL|DO|RE|MI|FA|LA|SI)([#b]?)([^\s/]*(?:\/\d+)?)(\/(SOL|DO|RE|MI|FA|LA|SI)[#b]?)?$/;
   const isChordLine = (l) => {
     const toks = l.trim().split(/\s+/).filter(Boolean);
     return toks.length > 0 && toks.every((t) => CHORD_RE.test(t));

@@ -24,14 +24,21 @@ NOTES = r"(?:DO|RE|MI|FA|SOL|LA|SI)"
 ALT = r"(?:#|b|♯|♭)?"
 SUFFIX = r"(?:[mM]?(?:aj)?[0-9+°]*(?:sus[24]?|dim|aug|add[0-9]+|min|-)?[0-9+°]*)"
 CHORD_RE = re.compile(
-    r"^%s%s%s(?:/%s%s)?$" % (NOTES, ALT, SUFFIX, NOTES, ALT)
+    # "LA4/7" (sospesa che risolve sulla settima) e' un suffisso, non un basso
+    r"^%s%s%s(?:/[0-9]+)?(?:/%s%s)?$" % (NOTES, ALT, SUFFIX, NOTES, ALT)
 )
 # marcatori strutturali che possono comparire su una riga di accordi
 CHORD_EXTRAS = re.compile(r"^(?:\(|\)|\||\|\||:\||\|:|x[0-9]+|[0-9]+x|-|–)$")
 
 
+def is_stack(tok):
+    """"REm_DO/MI_FA6": piu' accordi sulla stessa parola (sintassi dei file raw)."""
+    parts = tok.split("_")
+    return len(parts) > 1 and all(CHORD_RE.match(p) for p in parts)
+
+
 def is_chord_token(tok):
-    return bool(CHORD_RE.match(tok)) or bool(CHORD_EXTRAS.match(tok))
+    return bool(CHORD_RE.match(tok)) or is_stack(tok) or bool(CHORD_EXTRAS.match(tok))
 
 
 def is_chord_line(line):
@@ -44,7 +51,7 @@ def is_chord_line(line):
         t = t.strip(",.;")
         if not is_chord_token(t):
             return False
-        if CHORD_RE.match(t):
+        if CHORD_RE.match(t) or is_stack(t):
             real += 1
     # una riga di soli marcatori non e' una riga di accordi
     return real > 0
@@ -55,8 +62,9 @@ def chords_with_columns(line):
     out = []
     for m in re.finditer(r"\S+", line):
         tok = m.group(0)
-        if CHORD_RE.match(tok.strip(",.;")):
-            out.append((m.start(), tok.strip(",.;")))
+        tok = tok.strip(",.;")
+        if CHORD_RE.match(tok) or is_stack(tok):
+            out.append((m.start(), tok.replace("_", " ")))
     return out
 
 
@@ -261,6 +269,7 @@ SEASONS = {
     "Alleluja Oggi è nato": ["natale"],
     "Vieni Gesù, Maranathà": ["avvento"],
     "Ecco il Signore viene": ["avvento"],
+    "Nella notte o Dio": ["avvento"],  # "Noi veglieremo", Machetta
     "Osanna al figlio di David": ["palme"],
     "Alleluja Pasquale": ["pasqua"],
     "Resurrezione": ["pasqua"],
