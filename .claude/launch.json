@@ -4,8 +4,8 @@
     {
       "name": "canti",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8190", "--directory", "app"],
-      "port": 8190
+      "runtimeArgs": ["-m", "http.server", "8191", "--directory", "app"],
+      "port": 8191
     }
   ]
 }

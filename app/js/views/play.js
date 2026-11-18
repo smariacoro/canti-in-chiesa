@@ -11,6 +11,7 @@ import { transposeCell, keyLabel, prefersFlat } from '../chords.js';
 import { Metronome, playKey, stopKey, unlockAudio } from '../audio.js';
 import { navigate } from '../router.js';
 import { keepAwake } from './song.js';
+import { autoscrollButton, fermaScorrimento } from '../autoscroll.js';
 
 const metro = new Metronome();
 let swipeTarget = null;
@@ -22,6 +23,7 @@ export function playView(root, params, id) {
   root.classList.remove('wide');
   metro.stop();
   stopKey();
+  fermaScorrimento();
 
   if (!sl || !sl.items.length) {
     document.body.classList.remove('playing');
@@ -101,6 +103,7 @@ export function playView(root, params, id) {
       class: 'pill', type: 'button', 'aria-label': 'Ingrandisci il testo',
       text: 'A+', onclick: () => zoom(1),
     }),
+    autoscrollButton(song.id),
   ]);
   root.append(strumenti);
 
@@ -133,6 +136,7 @@ export function playView(root, params, id) {
 }
 
 export function leavePlay() {
+  fermaScorrimento();
   document.body.classList.remove('playing');
   metro.stop();
   stopKey();

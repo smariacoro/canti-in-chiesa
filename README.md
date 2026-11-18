@@ -8,8 +8,8 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 
 ## Cosa fa
 
-- **85 canti**: gli 82 del Drive del coro più «Laudato sii, o mi Signore», «Alleluja ed
-  oggi ancora» e «Nella notte o Dio», con testo e
+- **87 canti**: gli 82 del Drive del coro più «Laudato sii, o mi Signore», «Alleluja ed
+  oggi ancora», «Nella notte o Dio», «Tardi t'amai» e «Alla tua fonte», con testo e
   accordi in notazione italiana.
 - **Ordinamento per momento della messa** (Ingresso, Gloria, Al Vangelo, Offertorio,
   Santo, Comunione, Finale) e, dentro ogni momento, in ordine alfabetico di titolo.
@@ -25,6 +25,9 @@ sia su iPhone. Non c'è niente da compilare — è HTML, CSS e JavaScript puri.
 - **Spostamento degli accordi**: una modalità in cui il testo resta fisso e gli accordi
   si trascinano sulla parola giusta (oppure si toccano e si sposta con le frecce), per
   correggere quelli allineati male nei documenti originali.
+- **Scorrimento automatico** del testo (pagina del canto e modalità messa), con velocità
+  da 1 a 10 ricordata per ogni canto sul dispositivo; si ferma al tocco e in fondo.
+- **Telefono in orizzontale**: l'app ruota, con barre più sottili quando lo schermo è basso.
 - **Trasposizione** di semitoni, con gli accordi che si riscrivono da soli.
 - **Scalette con data**, strutturate come la messa: ogni momento è una casella che
   aspetta il suo canto, e restano visibili anche vuote così si vede a colpo d'occhio

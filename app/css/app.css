@@ -774,3 +774,43 @@ body.playing .view {
   position: absolute; width: 1px; height: 1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap;
 }
+
+/* ---------- scorrimento automatico ---------- */
+.autoscroll {
+  position: fixed; z-index: 45;
+  right: max(.8rem, env(safe-area-inset-right));
+  bottom: calc(4.2rem + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: .15rem;
+  padding: .25rem;
+  background: var(--bg-raised); border: 1px solid var(--line); border-radius: 999px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, .18);
+}
+body.playing .autoscroll { bottom: calc(4.6rem + env(safe-area-inset-bottom)); }
+.autoscroll button {
+  min-width: var(--tap); min-height: var(--tap);
+  border: 0; border-radius: 50%; background: none; cursor: pointer;
+  font-size: 1.3rem; color: var(--ink);
+}
+.autoscroll button:active { background: var(--bg-sunken); }
+.autoscroll .as-stop { color: var(--accent); font-size: 1rem; }
+.as-label { display: flex; flex-direction: column; align-items: center; min-width: 3.4rem; line-height: 1.05; }
+.as-label small { font-size: .62rem; color: var(--ink-faint); text-transform: uppercase; letter-spacing: .06em; }
+.as-val { font-weight: 800; font-size: 1.05rem; }
+
+/* ---------- telefono in orizzontale ----------
+   Lo schermo è basso: barre più sottili e la barra degli strumenti del canto
+   non resta più attaccata in alto, altrimenti per il testo resterebbe poco. */
+@media (orientation: landscape) and (max-height: 540px) {
+  .appbar-main { padding-top: .2rem; padding-bottom: .2rem; }
+  .appbar-logo { height: 1.6rem; }
+  .appbar-titles p { display: none; }
+  .toolbar, .searchbar { position: static; }
+  .tabbar a { flex-direction: row; gap: .4rem; min-height: 2.6rem; font-size: .78rem; }
+  .tab-badge { top: .2rem; }
+  .view { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+  .play-title { margin: .4rem 0 .3rem; font-size: 1.3rem; }
+  .play-nav { padding-top: .35rem; padding-bottom: calc(.35rem + env(safe-area-inset-bottom)); }
+  .autoscroll { bottom: calc(3.2rem + env(safe-area-inset-bottom)); }
+  body.playing .autoscroll { bottom: calc(3.8rem + env(safe-area-inset-bottom)); }
+  .modal { max-height: 96vh; }
+}

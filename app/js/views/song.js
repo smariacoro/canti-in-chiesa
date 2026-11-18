@@ -11,6 +11,7 @@ import { renderScore, organTemplate, singleStaffTemplate, ABC_LEGEND } from '../
 import { normalizzaPennata, vuoto, compatto, conteggio, modelli, SEGNI, SIMBOLO, NOME } from '../rhythm.js';
 import { sync, isConfigured } from '../sync.js';
 import { chordMoveView } from './chordmove.js';
+import { autoscrollButton, fermaScorrimento } from '../autoscroll.js';
 
 const metro = new Metronome(onBeat, onStep);
 let beatDots = null;
@@ -48,6 +49,7 @@ export function songView(root, params, id) {
   root.classList.remove('wide');
   metro.stop();
   stopKey();
+  fermaScorrimento();
 
   if (!song) {
     root.append(el('div', { class: 'empty' }, [
@@ -190,6 +192,8 @@ export function songView(root, params, id) {
     onclick: () => organModal(song, repaint, transpose),
   }));
 
+  toolbar.append(autoscrollButton(song.id));
+
   const metroBox = el('div', { class: 'metro', style: 'width:100%' });
   const paintMetro = () => {
     clear(metroBox);
@@ -275,6 +279,7 @@ function normalizeVideo(input) {
 }
 
 export function leaveSong() {
+  fermaScorrimento();
   metro.stop();
   stopKey();
   beatDots = null;
